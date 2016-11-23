@@ -1,0 +1,8 @@
+src/*.byte
+src/_build
+src/oUnit-suite*
+*.cxo
+*.cmo
+*.cmt
+*.cmti
+*.cmi

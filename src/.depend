@@ -1,0 +1,9 @@
+test.cmo : relation.cmi
+test.cmx : relation.cmx
+compile.cmo : eventStructure.cmo
+compile.cmx : eventStructure.cmx
+relation.cmo : relation.cmi
+relation.cmx : relation.cmi
+eventStructure.cmo : relation.cmi
+eventStructure.cmx : relation.cmx
+relation.cmi :
