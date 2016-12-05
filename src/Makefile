@@ -1,6 +1,6 @@
-PACKAGES = ppx_deriving.show,oUnit
+PACKAGES = ppx_deriving.show,ppx_deriving.ord,oUnit,extlib,str
 
-FILES =  relation eventStructure test compile
+FILES = location virtualMap relation eventStructure tokeniser parser test compile
 
 FILES_ML = $(addsuffix .ml,$(FILES))
 FILES_MLI = $(addsuffix .mli,$(FILES))
@@ -14,10 +14,10 @@ FILES_O = $(addsuffix .o,$(FILES))
 OCC_FLAGS = -g
 
 ocb-compile.byte :
-	ocamlbuild -use-ocamlfind compile.byte
+	ocamlbuild -use-ocamlfind -package $(PACKAGES) compile.byte
 
 ocb-compile.native :
-	ocamlbuild -use-ocamlfind compile.native
+	ocamlbuild -use-ocamlfind -package $(PACKAGES) compile.native
 
 ocb-test.byte :
 	ocamlbuild -use-ocamlfind test.byte
