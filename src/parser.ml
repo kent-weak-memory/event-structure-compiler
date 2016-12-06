@@ -36,13 +36,15 @@ type location =
 
 type id =
   | Source of string
-  | Temp of string * int
+  | Register of string * int
+  | Memory of string * int
   [@@deriving ord]
 
 let id_to_string id =
   match id with
   | Source s -> s
-  | Temp (s, i) -> "_tmp_" ^ s ^ (string_of_int i)
+  | Register (s, i) -> "R" ^ s ^ (string_of_int i)
+  | Memory (s, i) -> "_tmp_" ^ s ^ (string_of_int i)
 
 let pp_id fmt id =
   Format.fprintf fmt "%s" (id_to_string id)
@@ -56,7 +58,6 @@ type exp =
 
 type stmt =
   | Assign of id * exp
-  | DoWhile of stmt * exp * stmt
   | Ite of exp * stmt * stmt
   | Stmts of stmt list
   | Loc of stmt * int (* for line no annotation *)

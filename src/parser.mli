@@ -3,7 +3,8 @@ type memory_fence = MFence
 
 type id =
   | Source of string
-  | Temp of string * int
+  | Register of string * int
+  | Memory of string * int
   [@@deriving ord]
 
 type exp =
@@ -14,7 +15,6 @@ type exp =
 
 type stmt =
   | Assign of id * exp
-  | DoWhile of stmt * exp * stmt
   | Ite of exp * stmt * stmt
   | Stmts of stmt list
   | Loc of stmt * int (* for line no annotation *)
