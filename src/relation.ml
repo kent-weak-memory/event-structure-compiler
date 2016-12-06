@@ -20,7 +20,12 @@
 open List
 
 type 'a edge = 'a * 'a
+
+let pp_edge fmt (a, b) =
+  Format.fprintf fmt "%a -> %a" a b
+
 type 'a relation = ('a edge) list
+  [@deriving show]
 
 (* edge_in_relation(e, r) ≜ e ∈ r *)
 let rec edge_in_relation e r =

@@ -20,6 +20,12 @@
 type value = Val of int
 type location = Loc of int
 
+let pp_location fmt (Loc i) =
+  Format.fprintf fmt "%d" i
+
+let pp_value fmt (Val i) =
+  Format.fprintf fmt "%d" i
+
 type stmt =
   | Init
   | Read of (value * location)
