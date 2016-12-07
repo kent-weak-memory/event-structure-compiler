@@ -48,7 +48,7 @@ let translate_id id =
     if Str.string_match register_regexp s 0 then
       Register (Str.matched_string s, id)
     else
-      Memory (s, !virtual_address)
+      Memory (s, id)
   | _ -> raise (UnexpLoc "There should be no virtual variables at this stage of the compiler")
 
 let rec translate_expr (e: exp) =
