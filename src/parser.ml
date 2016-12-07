@@ -32,13 +32,13 @@ type memory_fence = MFence
 type location =
   | MemLoc of int
   | RegLoc of int
-  [@deriving ord]
+  [@deriving ord, show]
 
 type id =
   | Source of string
   | Register of string * int
   | Memory of string * int
-  [@@deriving ord]
+  [@deriving ord, show]
 
 let id_to_string id =
   match id with
@@ -54,7 +54,7 @@ type exp =
   | Num of int64
   | Op of exp * T.op * exp
   | Uop of T.uop * exp
-  [@@deriving show]
+  [@deriving show]
 
 type stmt =
   | Assign of id * exp
@@ -63,7 +63,7 @@ type stmt =
   | Loc of stmt * int (* for line no annotation *)
   | Par of stmt list list
   | Done
-  [@@deriving show]
+  [@deriving show]
 
 module RegisterMap = Map.Make(String)
 

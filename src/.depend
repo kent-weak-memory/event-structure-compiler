@@ -4,11 +4,11 @@ eventStructure.cmo : relation.cmi
 eventStructure.cmx : relation.cmx
 tokeniser.cmo :
 tokeniser.cmx :
-parser.cmo : tokeniser.cmo locations.cmi parser.cmi
-parser.cmx : tokeniser.cmx locations.cmx parser.cmi
+parser.cmo : tokeniser.cmo parser.cmi
+parser.cmx : tokeniser.cmx parser.cmi
 test.cmo : relation.cmi
 test.cmx : relation.cmx
-compile.cmo : tokeniser.cmo parser.cmi
-compile.cmx : tokeniser.cmx parser.cmx
+compile.cmo : translateLocations.cmo tokeniser.cmo parser.cmi
+compile.cmx : translateLocations.cmx tokeniser.cmx parser.cmx
 relation.cmi :
-parser.cmi : tokeniser.cmo locations.cmi
+parser.cmi : tokeniser.cmo

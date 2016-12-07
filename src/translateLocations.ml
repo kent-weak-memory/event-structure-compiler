@@ -23,20 +23,30 @@
 
 open Parser
 module T = Tokeniser
+module VarMap = Map.Make(String)
 
 exception UnexpLoc of string
 
 let register_regexp = Str.regexp "r[0-9]+"
 let virtual_address = ref 0
+let var_map = ref VarMap.empty
 
-(* TODO: This should look up existing items in a map before trying to assign a
-new virtual_address *)
+(* TODO: this is gross *)
 let translate_id id =
   match id with
   | Source s ->
-    virtual_address := (!virtual_address + 1);
+    let (var_map, id) = (
+      if VarMap.mem s !var_map then
+        (!var_map, VarMap.find s !var_map)
+      else
+        (
+          virtual_address := (!virtual_address + 1);
+          var_map := VarMap.add s !virtual_address !var_map;
+          (!var_map, !virtual_address)
+        )
+    ) in
     if Str.string_match register_regexp s 0 then
-      Register (Str.matched_string s, !virtual_address)
+      Register (Str.matched_string s, id)
     else
       Memory (s, !virtual_address)
   | _ -> raise (UnexpLoc "There should be no virtual variables at this stage of the compiler")
@@ -57,7 +67,7 @@ let rec translate_statement (s: stmt) =
   | Assign (i, e) -> Assign (translate_id i, translate_expr e)
   | Ite (e, s1, s2) -> Ite (translate_expr e, translate_statement s1, translate_statement s2)
   | Stmts ss -> Stmts (List.map translate_statement ss)
-  | Loc (stmt, ln) -> Loc (translate_statement s, ln)
+  | Loc (stmt, ln) -> Loc (translate_statement stmt, ln)
   | Par (stmts) -> Par (List.map translate_statements stmts)
   | Done -> Done
 
