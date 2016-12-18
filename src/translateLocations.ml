@@ -46,7 +46,7 @@ let translate_id id =
         )
     ) in
     if Str.string_match register_regexp s 0 then
-      Register (Str.matched_string s, id)
+      Register (s, id)
     else
       Memory (s, id)
   | _ -> raise (UnexpLoc "There should be no virtual variables at this stage of the compiler")

@@ -11,7 +11,7 @@ FILES_CMO = $(addsuffix .cmo,$(FILES))
 FILES_CMX = $(addsuffix .cmx,$(FILES))
 FILES_O = $(addsuffix .o,$(FILES))
 
-OCC_FLAGS = -g
+OCC_FLAGS += -bin-annot
 
 ocb-compile.byte :
 	ocamlbuild -use-ocamlfind -package $(PACKAGES) compile.byte

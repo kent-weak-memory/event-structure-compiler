@@ -65,15 +65,6 @@ type stmt =
   | Done
   [@deriving show]
 
-module RegisterMap = Map.Make(String)
-
-(* let register_map_foo r m =
-  try RegisterMap.find r m
-  with
-  | Not_found ->
-    let v = new_key in
-    RegisterMap.add r v m *)
-
 let parse_error (ln : int) (msg : string) : 'a =
   raise (ParseError ("Parse error on line " ^ string_of_int ln ^ ": " ^ msg))
 
@@ -148,7 +139,6 @@ and parse_stmt_list (toks) =
     let (s, toks) = parse_stmt toks in
     let (s_list, toks) = parse_stmt_list toks in
     (s::s_list, toks)
-
 
 (* Repeatedly parse statments until the input is empty *)
 (* NB, the difference between parse_stmt_list which can leave leftover tokens *)
