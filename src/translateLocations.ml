@@ -74,3 +74,7 @@ let rec translate_statement (s: stmt) =
 (* Calls replace_statement for every statement in the ast *)
 (* Sag Alloo *)
 and translate_statements stmts = List.map translate_statement stmts
+
+let t_stmts_vm stmts =
+  let x = translate_statements stmts in
+  (x, var_map)

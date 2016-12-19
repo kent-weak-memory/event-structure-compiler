@@ -66,13 +66,36 @@ module RegMap = Map.Make(
   let compare = compare end
 )
 
-let rec read_ast rho ast =
+(* TODO: I don't think this is convincing. *)
+let rec read_ast rho (ast: Parser.stmt list) =
   match ast with
   | [] -> Done
 
+  (* This throws away statements following the PAR. I think this is probably
+     desirable? *)
+  (* TODO: Warn if xs is not [] ? *)
+  (* TODO: Joining is a place the event structure model should be extended *)
   | Par stmts :: xs ->
     let m = List.map (read_ast rho) stmts in
-    cmp m
+    cmp m (* FIXME: This is not meant to be composition it's meant to be product *)
+
+  (* Strip out Done *)
+  (* TODO: Why do we have Done, again? *)
+  | Done :: stmts ->
+    read_ast rho stmts
+
+  (* Strip out line numbers. We could do something nicer with them,
+     but we're not going to. *)
+  | Loc (stmt, ln) :: stmts ->
+    read_ast rho (stmt::stmts)
+
+  | Ite (e, s1, s2) :: stmts ->
+    (* TODO: We need to do something with the expression to model how we get to
+       branches. Is this where stuff comes out of rho? *)
+    Prod (
+      read_ast rho (s1::stmts),
+      read_ast rho (s2::stmts)
+    )
 
   (* Read *)
   | Assign (Register (r, ir), Ident Memory (s, im)) :: stmts ->
