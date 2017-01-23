@@ -8,7 +8,7 @@ parser.cmo : tokeniser.cmo parser.cmi
 parser.cmx : tokeniser.cmx parser.cmi
 test.cmo : relation.cmi
 test.cmx : relation.cmx
-compile.cmo : translateLocations.cmo tokeniser.cmo parser.cmi
-compile.cmx : translateLocations.cmx tokeniser.cmx parser.cmx
+compile.cmo : translateLocations.cmi tokeniser.cmo parser.cmi ast.cmo
+compile.cmx : translateLocations.cmx tokeniser.cmx parser.cmx ast.cmx
 relation.cmi :
 parser.cmi : tokeniser.cmo

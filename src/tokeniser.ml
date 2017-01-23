@@ -30,7 +30,7 @@ type fence_type =
   | Acq
   | Rel_Acq
   | Rlx
-  [@deriving show]
+  [@@deriving show]
 
 type op =
   | Lt
@@ -39,16 +39,16 @@ type op =
   | Assign
   | And
   | Or
-  [@deriving show]
+  [@@deriving show]
 
 type uop =
   Not
-  [@deriving show]
+  [@@deriving show]
 
 type token =
   | Read
   | Write
-  | Num of int64
+  | Num of int
   | Ident of string
   | Fence of fence_type
   | LCurly
@@ -65,14 +65,14 @@ type token =
 
 type tok_loc = (token * int)
 
-let uop_to_string uop =
+let show_uop uop =
   match uop with
   | Not -> "!"
 
 let pp_uop fmt uop =
-  Format.fprintf fmt "%s" (uop_to_string uop)
+  Format.fprintf fmt "%s" (show_uop uop)
 
-let op_to_string op =
+let show_op op =
   match op with
   | Lt -> "<"
   | Gt -> ">"
@@ -82,7 +82,7 @@ let op_to_string op =
   | Or -> "||"
 
 let pp_op fmt op =
-  Format.fprintf fmt "%s" (op_to_string op)
+  Format.fprintf fmt "%s" (show_op op)
 
 let string_to_fence str =
   match str with
@@ -103,15 +103,15 @@ let show_token t =
   match t with
   | Read -> "R"
   | Write -> "W"
-  | Num v -> Int64.to_string v
+  | Num v -> string_of_int v
   | Ident l -> l
   | Fence f -> show_fence_type f
   | LCurly -> "{"
   | RCurly -> "}"
   | LParen -> "("
   | RParen -> ")"
-  | Op o -> op_to_string o
-  | Uop uo -> uop_to_string uo
+  | Op o -> show_op o
+  | Uop uo -> show_uop uo
   | Semicolon -> ";"
   | If -> "if"
   | Else -> "else"
@@ -134,7 +134,7 @@ let keyword_re =
   Str.regexp
     (String.concat "\\|"
        (List.map (fun (s, _) -> Str.quote s) keywords))
-let location_re = Str.regexp "[a-zA-Z]+"
+let location_re = Str.regexp "[a-zA-Z][a-zA-Z0-9]*"
 let number_re = Str.regexp "[0-9]+"
 
 let rec tokenise s pos line_n =
@@ -152,7 +152,7 @@ let rec tokenise s pos line_n =
     (tok, line_n) :: tokenise s (Str.match_end ()) line_n
   else if Str.string_match number_re s pos then
       let num =
-        try Int64.of_string (Str.matched_string s)
+        try int_of_string (Str.matched_string s)
         with Failure _ ->
           raise (TokeniserError ("Integer constant too big " ^ Str.matched_string s ^
                                  " on line " ^ string_of_int line_n))

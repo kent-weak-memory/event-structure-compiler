@@ -70,7 +70,8 @@ let _ = if !print_tokens then
 in
 
 let parsed_program = Parser.parse_program tokens in
-let _ = TranslateLocations.translate_statements parsed_program in
+let translated_program = TranslateLocations.translate_statements parsed_program in
+let _ = Ast.read_ast 0 Ast.RegMap.empty translated_program in
 
 ();;
 (* let tokens = Tokeniser.tokenise  *)

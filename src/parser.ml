@@ -38,23 +38,33 @@ type id =
   | Source of string
   | Register of string * int
   | Memory of string * int
-  [@deriving ord, show]
+  [@deriving show]
 
-let id_to_string id =
+let show_id id =
   match id with
   | Source s -> s
   | Register (s, i) -> "R" ^ s ^ (string_of_int i)
   | Memory (s, i) -> "_tmp_" ^ s ^ (string_of_int i)
 
 let pp_id fmt id =
-  Format.fprintf fmt "%s" (id_to_string id)
+  Format.fprintf fmt "%s" (show_id id)
 
 type exp =
   | Ident of id
-  | Num of int64
+  | Num of int
   | Op of exp * T.op * exp
   | Uop of T.uop * exp
-  [@deriving show]
+  [@@deriving show]
+
+let rec show_exp e =
+  match e with
+  | Ident id -> show_id id
+  | Num n -> string_of_int n
+  | Op (e1, o, e2) -> (show_exp e1) ^ " " ^ (T.show_op o) ^ " " ^ (show_exp e2)
+  | Uop (o, e) -> (T.show_uop o) ^ " " ^ (show_exp e)
+
+let pp_exp fmt e =
+  Format.fprintf fmt "%s" (show_exp e)
 
 type stmt =
   | Assign of id * exp
@@ -63,7 +73,7 @@ type stmt =
   | Loc of stmt * int (* for line no annotation *)
   | Par of stmt list list
   | Done
-  [@deriving show]
+  [@@deriving show]
 
 let parse_error (ln : int) (msg : string) : 'a =
   raise (ParseError ("Parse error on line " ^ string_of_int ln ^ ": " ^ msg))
@@ -119,11 +129,16 @@ let rec parse_stmt toks =
   | (T.If, ln) :: toks ->
     (match parse_exp toks with
      | (e, toks) ->
-       (match parse_stmt toks with
+      (
+        match parse_stmt toks with
         | (s1, (T.Else, _) :: toks) ->
           let (s2, toks) = parse_stmt toks in
           (Loc (Ite (e, s1, s2), ln), toks)
-        | _ -> parse_error ln "'if' without 'else'"))
+        | (s1, _ :: toks) ->
+          (Loc (Ite (e, s1, Done), ln), toks)
+        | (_, _) -> parse_error ln "Bad statement"
+      )
+    )
   | (T.LCurly, ln) :: toks ->
     let (s_list, toks) = parse_stmt_list toks in
     (Loc (Stmts (s_list), ln), toks)

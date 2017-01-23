@@ -5,14 +5,17 @@ type id =
   | Source of string
   | Register of string * int
   | Memory of string * int
-  [@deriving ord, show]
+  [@@deriving show]
 
 type exp =
   | Ident of id
-  | Num of int64
+  | Num of int
   | Op of exp * T.op * exp
   | Uop of T.uop * exp
-  [@deriving show]
+  [@@deriving show]
+
+val pp_exp : Format.formatter -> exp -> unit
+val show_exp : exp -> string
 
 type stmt =
   | Assign of id * exp
@@ -21,6 +24,9 @@ type stmt =
   | Loc of stmt * int (* for line no annotation *)
   | Par of stmt list list
   | Done
-  [@deriving show]
+  [@@deriving show]
+
+val show_stmt : stmt -> bytes
+val pp_stmt : Format.formatter -> stmt -> unit
 
 val parse_program : T.tok_loc list -> stmt list

@@ -29,7 +29,7 @@ let pp_location fmt (Loc i) =
 let pp_value fmt (Val i) =
   Format.fprintf fmt "%d" i
 
-let values = [0; 1; 2]
+let values = [0; 1]
 
 type ev_s =
   | Init
@@ -41,23 +41,23 @@ type ev_s =
   | Done
   [@@deriving show]
 
-let product () = ()
-
-let rec sum ev_s =
+let rec prod ln ev_s =
   match ev_s with
-  | [Read (l, v)] -> Read (l, v)
-  | Read (l, v) :: xs ->
-    Sum(Read (l, v), sum xs)
-  | [Write (l, v)] -> Write (l, v)
-  | Write (l, v) :: xs ->
-    Sum(Write (l, v), sum xs)
-  | _ -> raise (EventStructureExp "bad input")
-
-let rec cmp evs =
-  match evs with
-  | [] -> raise (EventStructureExp "bad input.")
+  | [] -> raise (EventStructureExp ("bad input on line " ^ string_of_int ln))
   | [x] -> x
-  | x::xs -> Comp(x, cmp xs)
+  | x::xs -> Prod(x, prod ln xs)
+
+let rec sum ln ev_s =
+  match ev_s with
+  | [] -> raise (EventStructureExp ("bad input on line " ^ string_of_int ln))
+  | [x] -> x
+  | x::xs -> Sum(x, sum ln xs)
+
+let rec cmp ln ev_s =
+  match ev_s with
+  | [] -> raise (EventStructureExp ("bad input on line " ^ string_of_int ln))
+  | [x] -> x
+  | x::xs -> Comp(x, cmp ln xs)
 
 let compose () = ()
 
@@ -66,36 +66,77 @@ module RegMap = Map.Make(
   let compare = compare end
 )
 
+let evaluate_bexp a b op =
+  let _ = Printf.printf "%d %s %d\n" a (T.show_op op) b in
+  match op with
+  | T.Eq -> a == b
+  | T.Gt -> a > b
+  | T.Lt -> a < b
+  | T.Assign -> true (* PANIC *)
+  | _ -> raise (EventStructureExp ((T.show_op op) ^ " op not implemented. "))
+
+let find_in v m =
+  try
+    RegMap.find v m
+  with
+    Not_found ->
+      let _ = Printf.printf "Could not find %d in map.\n" v in
+      0
+
+let rec eval_exp rho (e: Parser.exp) =
+  match e with
+  | Op (Ident (Register (_, ra)), op, Ident (Register (_, rb))) ->
+    let va = find_in ra rho in
+    let vb = find_in rb rho in
+    evaluate_bexp va vb op
+
+  | Op (Ident (Register (_, ra)), op, Num b) ->
+    let va = find_in ra rho in
+    evaluate_bexp va b op
+
+  | Op (Num a, op, Ident (Register (_, rb))) ->
+    let vb = find_in rb rho in
+    evaluate_bexp a vb op
+
+  | _ -> raise (EventStructureExp ((Parser.show_exp e) ^ " exp type not implemented."))
+
 (* TODO: I don't think this is convincing. *)
-let rec read_ast rho (ast: Parser.stmt list) =
+let rec read_ast ln rho (ast: Parser.stmt list) =
   match ast with
   | [] -> Done
 
+  | Stmts stmts :: xs ->
+    read_ast ln rho (stmts @ xs)
+
   (* This throws away statements following the PAR. I think this is probably
-     desirable? *)
-  (* TODO: Warn if xs is not [] ? *)
+     desirable under the Jeffrey model *)
   (* TODO: Joining is a place the event structure model should be extended *)
   | Par stmts :: xs ->
-    let m = List.map (read_ast rho) stmts in
-    cmp m (* FIXME: This is not meant to be composition it's meant to be product *)
+    let m = List.map (read_ast ln rho) stmts in
+    let _ =
+      match xs with
+      | [] -> ()
+      | _ -> Printf.printf "WARN Throwing away statements out side of parallel composition.\n"
+    in
+    prod ln m
 
   (* Strip out Done *)
   (* TODO: Why do we have Done, again? *)
   | Done :: stmts ->
-    read_ast rho stmts
+    read_ast ln rho stmts
 
-  (* Strip out line numbers. We could do something nicer with them,
-     but we're not going to. *)
+  (* Strip out line numbers. *)
   | Loc (stmt, ln) :: stmts ->
-    read_ast rho (stmt::stmts)
+    read_ast ln rho (stmt::stmts)
 
+  (* Evaluate the expression given the current context to flatten out control *)
+  (* Both branches will end up in the event structure because of the map for all
+     possible values to be read in the read case *)
   | Ite (e, s1, s2) :: stmts ->
-    (* TODO: We need to do something with the expression to model how we get to
-       branches. Is this where stuff comes out of rho? *)
-    Prod (
-      read_ast rho (s1::stmts),
-      read_ast rho (s2::stmts)
-    )
+    if eval_exp rho e then
+      read_ast ln rho (s1::stmts)
+    else
+      read_ast ln rho (s2::stmts)
 
   (* Read *)
   | Assign (Register (r, ir), Ident Memory (s, im)) :: stmts ->
@@ -103,13 +144,32 @@ let rec read_ast rho (ast: Parser.stmt list) =
       (fun n ->
         Comp (
           Read (Val n, Loc im),
-          (read_ast (RegMap.add im n rho) stmts)
+          (read_ast ln (RegMap.add ir n rho) stmts)
         )
       ) values in
-    sum sums
+    sum ln sums
 
-  (* Write *)
+  (* Const -> Mem Write *)
   | Assign (Memory (s, im), Num k) :: stmts ->
-    Comp (Write (Val (Int64.to_int k), Loc im), read_ast rho stmts)
+    Comp (Write (Val k, Loc im), read_ast ln rho stmts)
 
-  | _ -> raise (EventStructureExp "bad input")
+  (* Mem -> Mem write *)
+  | Assign (Memory (sl, iml), Ident Memory (sr, imr)) :: stmts ->
+    (* we should transform this into a read and a write with a virtual register *)
+    let sums = List.map
+      (fun n ->
+        Comp (
+          Read (Val n, Loc imr),
+          Comp (
+            Write(Val n, Loc iml),
+            read_ast ln (RegMap.add imr n rho) stmts
+          )
+        )
+      )
+    values in
+    sum ln sums
+
+
+  | st ->
+    let er = String.concat "\n  " (List.map (Parser.show_stmt) st) in
+    raise (EventStructureExp ("bad input on line " ^ string_of_int ln ^ "\n  " ^ er))
