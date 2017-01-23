@@ -114,18 +114,18 @@ let rec eval_exp rho (e: Parser.exp) =
   | _ -> raise (EventStructureExp ((Parser.show_exp e) ^ " exp type not implemented."))
 
 (* TODO: I don't think this is convincing. *)
-let rec read_ast ln rho (ast: Parser.stmt list) =
+let rec read_ast ?(ln=0) ?(rho=RegMap.empty) (ast: Parser.stmt list) =
   match ast with
   | [] -> Done
 
   | Stmts stmts :: xs ->
-    read_ast ln rho (stmts @ xs)
+    read_ast ~ln:ln ~rho:rho (stmts @ xs)
 
   (* This throws away statements following the PAR. I think this is probably
      desirable under the Jeffrey model *)
   (* TODO: Joining is a place the event structure model should be extended *)
   | Par stmts :: xs ->
-    let m = List.map (read_ast ln rho) stmts in
+    let m = List.map (read_ast ~ln:ln ~rho:rho) stmts in
     let _ =
       match xs with
       | [] -> ()
@@ -136,20 +136,20 @@ let rec read_ast ln rho (ast: Parser.stmt list) =
   (* Strip out Done *)
   (* TODO: Why do we have Done, again? *)
   | Done :: stmts ->
-    read_ast ln rho stmts
+    read_ast ~ln:ln ~rho:rho stmts
 
   (* Strip out line numbers. *)
   | Loc (stmt, ln) :: stmts ->
-    read_ast ln rho (stmt::stmts)
+    read_ast ~ln:ln ~rho:rho (stmt::stmts)
 
   (* Evaluate the expression given the current context to flatten out control *)
   (* Both branches will end up in the event structure because of the map for all
      possible values to be read in the read case *)
   | Ite (e, s1, s2) :: stmts ->
     if eval_exp rho e then
-      read_ast ln rho (s1::stmts)
+      read_ast ~ln:ln ~rho:rho (s1::stmts)
     else
-      read_ast ln rho (s2::stmts)
+      read_ast ~ln:ln ~rho:rho (s2::stmts)
 
   (* Read *)
   | Assign (Register (r, ir), Ident Memory (s, im)) :: stmts ->
@@ -157,14 +157,14 @@ let rec read_ast ln rho (ast: Parser.stmt list) =
       (fun n ->
         Comp (
           Read (Val n, Loc im),
-          (read_ast ln (RegMap.add ir n rho) stmts)
+          (read_ast ~ln:ln ~rho:(RegMap.add ir n rho) stmts)
         )
       ) values in
     sum ln sums
 
   (* Const -> Mem Write *)
   | Assign (Memory (s, im), Num k) :: stmts ->
-    Comp (Write (Val k, Loc im), read_ast ln rho stmts)
+    Comp (Write (Val k, Loc im), read_ast ~ln:ln ~rho:rho stmts)
 
   (* Mem -> Mem write *)
   | Assign (Memory (sl, iml), Ident Memory (sr, imr)) :: stmts ->
@@ -175,7 +175,7 @@ let rec read_ast ln rho (ast: Parser.stmt list) =
           Read (Val n, Loc imr),
           Comp (
             Write(Val n, Loc iml),
-            read_ast ln (RegMap.add imr n rho) stmts
+            read_ast ~ln:ln ~rho:(RegMap.add imr n rho) stmts
           )
         )
       )

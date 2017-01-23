@@ -71,7 +71,7 @@ in
 
 let parsed_program = Parser.parse_program tokens in
 let translated_program = TranslateLocations.translate_statements parsed_program in
-let _ = EventStructure.read_ast 0 EventStructure.RegMap.empty translated_program in
+let _ = EventStructure.read_ast translated_program in
 
 ();;
 (* let tokens = Tokeniser.tokenise  *)
