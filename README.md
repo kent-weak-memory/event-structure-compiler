@@ -58,7 +58,9 @@ LICS'16 paper *Towards an Event Structure Memory Model of Relaxed Memory*.
 ### Event Structure
 - [ ] Work in progress
 
-A relational realisation of an actual event structure.
+A relational realisation of an actual event structure. Transformations from this
+to the various output formats will be very simplistic, as each of the output
+formats is intended to be relational.
 
 ### Output stages
 
