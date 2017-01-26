@@ -1,6 +1,6 @@
 (*
  * Event Structure Compiler
- * Copyright (c) 2016 Simon Cooksey, Scott Owens
+ * Copyright (c) 2017 Simon Cooksey, Scott Owens
  *
  * This portion of the software is derived from Scott Owens' sample compiler.
  *

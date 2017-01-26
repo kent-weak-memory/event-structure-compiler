@@ -1,6 +1,6 @@
 (*
  * Event Structure Compiler
- * Copyright (c) 2016 Simon Cooksey
+ * Copyright (c) 2017 Simon Cooksey
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
