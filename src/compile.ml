@@ -24,9 +24,12 @@
  * Compiles Jeffrey style programs into event-structures
  *)
 
+open RelateEventStructure
+
 
 let print_tokens = ref false;;
 let filename_ref = ref None;;
+let outfile_ref = ref None;;
 
 let options = Arg.align ([
   ("--print-tokens", Arg.Set print_tokens, " print the tokens as they are tokenised.")
@@ -40,10 +43,11 @@ let _ =
        match !filename_ref with
        | None ->
          filename_ref := Some s
-       | Some s' ->
-         (Format.printf "Error: given multiple files to process: %s and %s\n"
-            s' s;
-          exit 1))
+       | Some s' -> (match !outfile_ref with
+         | None -> outfile_ref := Some s
+         | Some s'' -> (Printf.printf "Error: specified 2 output files %s and %s" s'' s; exit 1)
+         )
+    )
     usage_msg
 
 let filename =
@@ -72,7 +76,24 @@ in
 let parsed_program = Parser.parse_program tokens in
 let translated_program = TranslateLocations.translate_statements parsed_program in
 let es = EventStructure.read_ast translated_program in
-let _ = RelateEventStructure.read_es es [] ([],[]) in
+
+let evs, labs, rels = RelateEventStructure.read_es (EventStructure.Comp (EventStructure.Init, es)) [] [] ([],[]) in
+
+(* It's much nicer if we sort the events *)
+let labs = List.sort (fun (L ((E a), _)) (L ((E b), _)) ->
+  compare a b
+) labs in
+
+
+let output_fmt =
+  match !outfile_ref with
+  | Some fn ->
+    let oc = open_out fn in
+    Format.make_formatter (Pervasives.output oc) (fun () -> Pervasives.flush oc)
+  | None -> Format.std_formatter
+in
+
+OutputAlloy.print_alloy output_fmt evs labs rels;;
 
 ();;
 (* let tokens = Tokeniser.tokenise  *)

@@ -16,12 +16,6 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *)
 
-open Relation
-open EventStructure
+open RelateEventStructure
 
-(* Order, Conflict, val, loc, zero *)
-type ev_r = (ev_s relation * ev_s relation) * (ev_s relation * ev_s relation * ev_s relation)
-type event = E of int
-type label = L of (event * ev_s)
-
-val read_es : ev_s -> event list -> label list -> (event * event) list * (event * event) list -> event list * label list * ((event * event) list * (event * event) list)
+val print_alloy : Format.formatter -> event list -> label list -> (event * event) list * (event * event) list -> unit

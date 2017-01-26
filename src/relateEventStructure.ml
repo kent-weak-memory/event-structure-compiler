@@ -28,34 +28,47 @@ exception RelateEventStructure of string
 
 (* ((Order, Conflict), (val, loc, zero)) *)
 type ev_r = (ev_s relation * ev_s relation) * (ev_s relation * ev_s relation * ev_s relation)
+type event = E of int
+type label = L of (event * ev_s)
 
-let rec read_es es events rels =
+let event_ordinal = ref 0
+
+let rec read_es es events labels rels =
   let (++) = Mset.union in
   let (><) = Mset.cross in
   match es with
-  | Init | Read _ | Write _ | Done -> es::events, rels
+  | Init | Read _ | Write _ ->
+    event_ordinal := !event_ordinal + 1;
+    let new_ev = E !event_ordinal in
+    new_ev::events, (L (new_ev, es))::labels, rels
+
+  | Done -> events, labels, rels
 
   | Prod (l, r) ->
-    let evs_l, (ord_l, conf_l) = read_es l events rels in
-    let evs_r, (ord_r, conf_r) = read_es r events rels in
+    let evs_l, labs_l, (ord_l, conf_l) = read_es l events labels rels in
+    let evs_r, labs_r, (ord_r, conf_r) = read_es r events labels rels in
     let evs = evs_l ++ evs_r in
     let ord = ord_l ++ ord_r in
     let conf = conf_l ++ conf_r in
-    evs, (ord, conf)
+    let labs = labs_l ++ labs_r in
+    evs, labs, (ord, conf)
 
   | Sum (l, r) ->
-    let evs_l, (ord_l, conf_l) = read_es l events rels in
-    let evs_r, (ord_r, conf_r) = read_es r events rels in
+    let evs_l, labs_l, (ord_l, conf_l) = read_es l events labels rels in
+    let evs_r, labs_r, (ord_r, conf_r) = read_es r events labels rels in
     let evs = evs_l ++ evs_r in
     let ord = ord_l ++ ord_r in
     let conf = (conf_l ++ conf_r) ++ (evs_l >< evs_r) ++ (evs_r >< evs_l) in
-    evs, (ord, conf)
+    let labs = labs_l ++ labs_r in
+    evs, labs, (ord, conf)
 
-  (* This is wrong *)
+  (* This might be wrong *)
   | Comp (l, r) ->
-    let evs_l, (ord_l, conf_l) = read_es l events rels in
-    let evs_r, (ord_r, conf_r) = read_es r events rels in
+    let evs_l, labs_l, (ord_l, conf_l) = read_es l events labels rels in
+    let evs_r, labs_r, (ord_r, conf_r) = read_es r events labels rels in
+
+    let labs = labs_l ++ labs_r in
     let evs = Mset.union evs_l evs_r in
-    let ord = Mset.union ord_l ord_r in
+    let ord = (evs_l >< evs_r) in
     let conf = Mset.union conf_l conf_r in
-    evs, (ord, conf)
+    evs, labs, (ord, conf)
