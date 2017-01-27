@@ -84,7 +84,9 @@ let evaluate_bexp a b op =
   match op with
   | T.Eq -> a == b
   | T.Gt -> a > b
+  | T.Gte -> a >= b
   | T.Lt -> a < b
+  | T.Lte -> a <= b
   | T.Assign -> true (* PANIC *)
   | _ -> raise (EventStructureExp ((T.show_op op) ^ " op not implemented. "))
 
@@ -164,6 +166,10 @@ let rec read_ast ?(ln=0) ?(rho=RegMap.empty) (ast: Parser.stmt list) =
 
   (* Const -> Mem Write *)
   | Assign (Memory (s, im), Num k) :: stmts ->
+    Comp (Write (Val k, Loc im), read_ast ~ln:ln ~rho:rho stmts)
+
+  | Assign (Memory (s, im), Ident Register (i, ir)) :: stmts ->
+    let k = find_in ir rho in
     Comp (Write (Val k, Loc im), read_ast ~ln:ln ~rho:rho stmts)
 
   (* Mem -> Mem write *)

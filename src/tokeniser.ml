@@ -34,7 +34,9 @@ type fence_type =
 
 type op =
   | Lt
+  | Lte
   | Gt
+  | Gte
   | Eq
   | Assign
   | And
@@ -75,7 +77,9 @@ let pp_uop fmt uop =
 let show_op op =
   match op with
   | Lt -> "<"
+  | Lte -> "<="
   | Gt -> ">"
+  | Gte -> ">="
   | Eq -> "=="
   | Assign -> "="
   | And -> "&&"
@@ -122,6 +126,7 @@ let show_token t =
 let keywords =
   [("R", Read); ("W", Write); ("{", LCurly); ("}", RCurly); ("||", Op Or);
   ("(", LParen); (")", RParen); ("==", Op Eq); ("=", Op Assign); ("&&", Op And);
+  (">=", Op Gte); ("<=", Op Lte);
   (">", Op Gt); ("<", Op Lt); (";", Semicolon); ("if", If); ("else", Else);
   ("done", Done); ("PAR_LIST", ParCmp)]
 
