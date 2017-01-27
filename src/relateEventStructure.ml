@@ -62,7 +62,7 @@ let rec read_es es events labels rels =
     let labs = labs_l ++ labs_r in
     evs, labs, (ord, conf)
 
-  (* This might be wrong *)
+  (* This might not be wrong *)
   | Comp (l, r) ->
     let evs_l, labs_l, (ord_l, conf_l) = read_es l events labels rels in
     let evs_r, labs_r, (ord_r, conf_r) = read_es r events labels rels in
@@ -70,5 +70,5 @@ let rec read_es es events labels rels =
     let labs = labs_l ++ labs_r in
     let evs = (evs_l ++ evs_r) in
     let ord = (evs_l >< evs_r) ++ ord_r ++ ord_l in
-    let conf = Mset.union conf_l conf_r in
+    let conf = conf_l ++ conf_r in
     evs, labs, (ord, conf)
