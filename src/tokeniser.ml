@@ -136,10 +136,13 @@ let keyword_re =
        (List.map (fun (s, _) -> Str.quote s) keywords))
 let location_re = Str.regexp "[a-zA-Z][a-zA-Z0-9]*"
 let number_re = Str.regexp "[0-9]+"
+let comment_re = Str.regexp "//.*$"
 
 let rec tokenise s pos line_n =
   if pos >= String.length s then
     []
+  else if Str.string_match comment_re s pos then
+    tokenise s (Str.match_end ()) line_n
   else if Str.string_match space_re s pos then
     tokenise s (Str.match_end ()) line_n
   else if Str.string_match newline_re s pos then
