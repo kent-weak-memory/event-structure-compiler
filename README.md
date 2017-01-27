@@ -50,13 +50,13 @@ as a register, any other variable will be a memory location. E.g. `x`, `y`,
 `foo`.
 
 ### Event Structure IR
-- [ ] Work in progress
+- [x] Mostly done
 
 This is Alan Jeffrey style notation for event structures as presented in his
 LICS'16 paper *Towards an Event Structure Memory Model of Relaxed Memory*.
 
 ### Event Structure
-- [ ] Work in progress
+- [x] Mostly done
 
 A relational realisation of an actual event structure. Transformations from this
 to the various output formats will be very simplistic, as each of the output
@@ -73,7 +73,7 @@ representations.
 To go into Jon's work on a formal Isabelle definition of event structures.
 
 #### Alloy
-- [ ] Work in progress
+- [ ] Nearly there
 
 To go into my work on modelling an event structure memory model in Alloy.
 
