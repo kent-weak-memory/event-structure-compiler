@@ -68,7 +68,7 @@ let rec read_es es events labels rels =
     let evs_r, labs_r, (ord_r, conf_r) = read_es r events labels rels in
 
     let labs = labs_l ++ labs_r in
-    let evs = Mset.union evs_l evs_r in
-    let ord = (evs_l >< evs_r) in
+    let evs = (evs_l ++ evs_r) in
+    let ord = (evs_l >< evs_r) ++ ord_r ++ ord_l in
     let conf = Mset.union conf_l conf_r in
     evs, labs, (ord, conf)
