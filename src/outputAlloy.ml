@@ -20,7 +20,10 @@ open RelateEventStructure
 open EventStructure
 
 let show_event (E id) =
-  Char.escaped (Char.chr (id + (Char.code 'a') - 1))
+  if (id + (Char.code 'a') - 1) < (Char.code 'x') then
+    Char.escaped (Char.chr (id + (Char.code 'a') - 1))
+  else
+    String.concat "" ["x"; string_of_int id]
 
 let show_label label =
   match label with
