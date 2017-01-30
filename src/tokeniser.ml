@@ -38,9 +38,14 @@ type op =
   | Gt
   | Gte
   | Eq
+  | Ne
   | Assign
   | And
   | Or
+  | Plus
+  | Minus
+  | Times
+  | Div
   [@@deriving show]
 
 type uop =
@@ -81,9 +86,14 @@ let show_op op =
   | Gt -> ">"
   | Gte -> ">="
   | Eq -> "=="
+  | Ne -> "!="
   | Assign -> "="
   | And -> "&&"
   | Or -> "||"
+  | Plus -> "+"
+  | Minus -> "-"
+  | Times -> "*"
+  | Div -> "/"
 
 let pp_op fmt op =
   Format.fprintf fmt "%s" (show_op op)
@@ -126,7 +136,8 @@ let show_token t =
 let keywords =
   [("R", Read); ("W", Write); ("{", LCurly); ("}", RCurly); ("||", Op Or);
   ("(", LParen); (")", RParen); ("==", Op Eq); ("=", Op Assign); ("&&", Op And);
-  (">=", Op Gte); ("<=", Op Lte);
+  ("!=", Op Ne); (">=", Op Gte); ("<=", Op Lte); ("+", Op Plus);
+  ("-", Op Minus); ("*", Op Times); ("/", Op Div);
   (">", Op Gt); ("<", Op Lt); (";", Semicolon); ("if", If); ("else", Else);
   ("done", Done); ("PAR_LIST", ParCmp)]
 

@@ -80,16 +80,6 @@ module RegMap = Map.Make(
   let compare = compare end
 )
 
-let evaluate_bexp a b op =
-  match op with
-  | T.Eq -> a == b
-  | T.Gt -> a > b
-  | T.Gte -> a >= b
-  | T.Lt -> a < b
-  | T.Lte -> a <= b
-  | T.Assign -> true (* PANIC *)
-  | _ -> raise (EventStructureExp ((T.show_op op) ^ " op not implemented. "))
-
 let find_in v m =
   try
     RegMap.find v m
@@ -98,22 +88,62 @@ let find_in v m =
       let _ = Printf.printf "Could not find %d in map.\n" v in
       0
 
+let rec eval_bexp rho l r op =
+  let a = eval_exp l rho in
+  let b = eval_exp r rho in
+  match op with
+  | T.Eq -> a == b
+  | T.Ne -> a != b
+  | T.Gt -> a > b
+  | T.Gte -> a >= b
+  | T.Lt -> a < b
+  | T.Lte -> a <= b
+  | T.Assign -> true (* PANIC *)
+  | _ -> raise (EventStructureExp ((T.show_op op) ^ " op not implemented. "))
+and eval_exp ?(wrn_bexp=true) e rho : int =
+  match e with
+  | Num n -> n
+  | Op (l, op, r) ->
+    begin
+    match op with
+    | T.Plus -> (eval_exp l rho) + (eval_exp r rho)
+    | T.Minus -> (eval_exp l rho) - (eval_exp r rho)
+    | T.Times -> (eval_exp l rho) * (eval_exp r rho)
+    | T.Div -> (eval_exp l rho) / (eval_exp r rho)
+    | T.Lt | T.Lte | T.Gt | T.Gte | T.Ne | T.Or | T.And | T.Eq | T.Assign ->
+      if wrn_bexp then
+      Printf.printf "WARN boolean expression used as value. Up-casting to integer 0|1.\n"
+      else ();
+
+      if eval_bexp rho l r op then 1
+      else 0
+    end
+  | Ident i ->
+    begin
+    match i with
+    | Source _ -> raise (EventStructureExp "Unexpected source variable in event structure.")
+    | Memory _ -> raise (EventStructureExp "Cannot use memory locations in arithmetic expressions.")
+    | Register (_, i) -> find_in i rho
+    end
+  | Uop _ -> raise (EventStructureExp "Uops not implemented in this context.")
+
+(*
 let rec eval_exp rho (e: Parser.exp) =
   match e with
   | Op (Ident (Register (_, ra)), op, Ident (Register (_, rb))) ->
     let va = find_in ra rho in
     let vb = find_in rb rho in
-    evaluate_bexp va vb op
+    eval_bexp va vb op
 
   | Op (Ident (Register (_, ra)), op, Num b) ->
     let va = find_in ra rho in
-    evaluate_bexp va b op
+    eval_bexp va b op
 
   | Op (Num a, op, Ident (Register (_, rb))) ->
     let vb = find_in rb rho in
-    evaluate_bexp a vb op
+    eval_bexp a vb op
 
-  | _ -> raise (EventStructureExp ((Parser.show_exp e) ^ " exp type not implemented."))
+  | _ -> raise (EventStructureExp ((Parser.show_exp e) ^ " exp type not implemented.")) *)
 
 (* TODO: I don't think this is convincing. *)
 let rec read_ast ?(ln=0) ?(rho=RegMap.empty) (ast: Parser.stmt list) =
@@ -148,7 +178,7 @@ let rec read_ast ?(ln=0) ?(rho=RegMap.empty) (ast: Parser.stmt list) =
   (* Both branches will end up in the event structure because of the map for all
      possible values to be read in the read case *)
   | Ite (e, s1, s2) :: stmts ->
-    if eval_exp rho e then
+    if (eval_exp ~wrn_bexp:false e rho) == 1 then
       read_ast ~ln:ln ~rho:rho (s1::stmts)
     else
       read_ast ~ln:ln ~rho:rho (s2::stmts)
@@ -163,6 +193,10 @@ let rec read_ast ?(ln=0) ?(rho=RegMap.empty) (ast: Parser.stmt list) =
         )
       ) values in
     sum ln sums
+
+  | Assign (Register (r, ir), expr) :: stmts ->
+    let k = eval_exp expr rho in
+    read_ast ~ln:ln ~rho:(RegMap.add ir k rho) stmts
 
   (* Const -> Mem Write *)
   | Assign (Memory (s, im), Num k) :: stmts ->
@@ -188,6 +222,10 @@ let rec read_ast ?(ln=0) ?(rho=RegMap.empty) (ast: Parser.stmt list) =
     values in
     sum ln sums
 
+  (* We can evaluate expressions too, as long there are no memory locs in expr *)
+  | Assign (Memory (s, im), expr) :: stmts ->
+    let k = eval_exp expr rho in
+    Comp (Write (Val k, Loc im), read_ast ~ln:ln ~rho:rho stmts)
 
   | st ->
     let er = String.concat "\n  " (List.map (Parser.show_stmt) st) in

@@ -19,6 +19,8 @@
 open RelateEventStructure
 open EventStructure
 
+exception AlloyOutputException of string
+
 let show_event (E id) =
   if (id + (Char.code 'a') - 1) < (Char.code 'x') then
     Char.escaped (Char.chr (id + (Char.code 'a') - 1))
@@ -60,14 +62,27 @@ let find_values labs =
     match es with
     | Read (Val vl, _) -> vl
     | Write (Val vl, _) -> vl
+    | Init -> 0
     | _ -> -1
   ) labs))
 
-
-let relate x xs =
-  List.map (fun y -> (x, y)) xs
+let rec ev_with f v labs =
+  match labs with
+  | x::xs when (f v x) -> x
+  | _::xs -> ev_with f v xs
+  | [] -> raise (AlloyOutputException "invarient violated in alloy output")
 
 let strip_label (L (ev, _)) = ev
+
+let rec print_unrelated fmt f prop vals labs =
+  match vals with
+  | p::q::xs ->
+    let a = ev_with f p labs in
+    let b = ev_with f q labs in
+    Format.fprintf fmt "   and %s->%s not in MemoryEventStructure.%s\n"
+      (show_event (strip_label a)) (show_event (strip_label b)) prop;
+    print_unrelated fmt f prop (q::xs) labs
+  | _ -> ()
 
 (* Don't look too hard, eh? *)
 let print_alloy fmt events labels rels =
@@ -82,6 +97,15 @@ let print_alloy fmt events labels rels =
   let order, conflict = rels in
   Format.fprintf fmt "\n\n   and MemoryEventStructure.O = ^(%s" (String.concat " + " (List.map show_relation order));
   Format.fprintf fmt ") + \n    (iden :> (%s))\n\n" (String.concat " + " (List.map show_event events));
+  Format.fprintf fmt "   and let ord = MemoryEventStructure.O | \n";
+  Format.fprintf fmt "   MemoryEventStructure.C =\n";
+
+  Format.fprintf fmt "       symmClosure[%s" (String.concat " + "
+  (List.map (fun (l, r) ->
+    Format.sprintf "(%s.ord->%s.ord)" (show_event l) (show_event r)
+  ) conflict));
+
+  Format.fprintf fmt "]\n";
 
   let locations = find_locations labels in
   let sloc = List.map (fun l ->
@@ -97,20 +121,36 @@ let print_alloy fmt events labels rels =
     )
   ) sloc in
 
+  let values = find_values labels in
+  let sval = List.map (fun l ->
+    List.map strip_label (List.filter (same_value l) labels)
+  ) values in
+
+  let svalr = List.map (fun x ->
+    List.flatten (List.map (fun p ->
+        List.map (fun q ->
+          (p, q)
+        ) x
+      ) x
+    )
+  ) sval in
+
   let _ = List.map (fun (l,r) ->
     Format.fprintf fmt "   and %s->%s in MemoryEventStructure.loc\n" (show_event l) (show_event r)
   ) (List.flatten slocr) in
 
+  print_unrelated fmt (same_location) "loc" locations labels;
 
-  Format.fprintf fmt "   and let ord = MemoryEventStructure.O | \n";
-  Format.fprintf fmt "   MemoryEventStructure.C =\n";
+  let _ = List.map (fun (l,r) ->
+    Format.fprintf fmt "   and %s->%s in MemoryEventStructure.val\n" (show_event l) (show_event r)
+  ) (List.flatten svalr) in
 
-  Format.fprintf fmt "       symmClosure[%s" (String.concat " + "
-  (List.map (fun (l, r) ->
-    Format.sprintf "(%s.ord->%s.ord)" (show_event l) (show_event r)
-  ) conflict));
+  print_unrelated fmt (same_value) "val" values labels;
 
-  Format.fprintf fmt "]\n\n";
-  Format.fprintf fmt "   and some MaxConfig\n";
+
+  let z = ev_with (same_value) 0 labels in
+  Format.fprintf fmt "   and %s in MemoryEventStructure.zero" (show_event (strip_label z));
+
+  Format.fprintf fmt "\n   and some MaxConfig\n";
   Format.fprintf fmt "}\n";
   ()
