@@ -8,5 +8,5 @@ TESTS = ./test.als \
 
 all: $(TESTS)
 
-clean: $(TESTS)
+clean:
 	rm -rf $(TESTS)
