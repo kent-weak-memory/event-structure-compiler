@@ -47,7 +47,7 @@ let values = [0; 1]
 
 type ev_s =
   | Init
-  | Read of (value * location)
+  | Read of (value * location * location)
   | Write of (value * location)
   | Sum of (ev_s * ev_s)  (* + *)
   | Prod of (ev_s * ev_s) (* × *)
@@ -127,24 +127,6 @@ and eval_exp ?(wrn_bexp=true) e rho : int =
     end
   | Uop _ -> raise (EventStructureExp "Uops not implemented in this context.")
 
-(*
-let rec eval_exp rho (e: Parser.exp) =
-  match e with
-  | Op (Ident (Register (_, ra)), op, Ident (Register (_, rb))) ->
-    let va = find_in ra rho in
-    let vb = find_in rb rho in
-    eval_bexp va vb op
-
-  | Op (Ident (Register (_, ra)), op, Num b) ->
-    let va = find_in ra rho in
-    eval_bexp va b op
-
-  | Op (Num a, op, Ident (Register (_, rb))) ->
-    let vb = find_in rb rho in
-    eval_bexp a vb op
-
-  | _ -> raise (EventStructureExp ((Parser.show_exp e) ^ " exp type not implemented.")) *)
-
 (* TODO: I don't think this is convincing. *)
 let rec read_ast ?(ln=0) ?(rho=RegMap.empty) (ast: Parser.stmt list) =
   match ast with
@@ -188,7 +170,7 @@ let rec read_ast ?(ln=0) ?(rho=RegMap.empty) (ast: Parser.stmt list) =
     let sums = List.map
       (fun n ->
         Comp (
-          Read (Val n, Loc im),
+          Read (Val n, Loc im, Loc ir),
           (read_ast ~ln:ln ~rho:(RegMap.add ir n rho) stmts)
         )
       ) values in
@@ -212,7 +194,7 @@ let rec read_ast ?(ln=0) ?(rho=RegMap.empty) (ast: Parser.stmt list) =
     let sums = List.map
       (fun n ->
         Comp (
-          Read (Val n, Loc imr),
+          Read (Val n, Loc imr, Loc iml),
           Comp (
             Write(Val n, Loc iml),
             read_ast ~ln:ln ~rho:(RegMap.add imr n rho) stmts

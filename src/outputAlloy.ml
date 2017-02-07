@@ -39,20 +39,20 @@ let show_relation (left, right) =
 
 let same_location l (L (_, es)) =
   match es with
-  | Read (_, Loc loc) when loc == l -> true
+  | Read (_, Loc loc, _) when loc == l -> true
   | Write (_, Loc loc) when loc == l -> true
   | _ -> false
 
 let same_value v (L (_, es)) =
   match es with
-  | Read (Val vl, _) when vl == v -> true
+  | Read (Val vl, _, _) when vl == v -> true
   | Write (Val vl, _) when vl == v -> true
   | _ -> false
 
 let find_locations labs =
   Mset.make_proper (List.filter ((!=) (-1)) (List.map (fun (L (_, es)) ->
     match es with
-    | Read (_, Loc loc) -> loc
+    | Read (_, Loc loc, _) -> loc
     | Write (_, Loc loc) -> loc
     | _ -> -1
   ) labs))
@@ -60,7 +60,7 @@ let find_locations labs =
 let find_values labs =
   Mset.make_proper (List.filter ((!=) (-1)) (List.map (fun (L (_, es)) ->
     match es with
-    | Read (Val vl, _) -> vl
+    | Read (Val vl, _, _) -> vl
     | Write (Val vl, _) -> vl
     | Init -> 0
     | _ -> -1
@@ -85,10 +85,10 @@ let rec print_unrelated fmt f prop vals labs =
   | _ -> ()
 
 (* Don't look too hard, eh? *)
-let print_alloy fmt events labels rels =
+let print_alloy fmt alloy_path events labels rels =
   Format.fprintf fmt "module event_structures/examples\n";
-  Format.fprintf fmt "open event_structures/event_structure\n";
-  Format.fprintf fmt "open event_structures/configuration\n\n";
+  Format.fprintf fmt "open %s/event_structures/event_structure\n" alloy_path;
+  Format.fprintf fmt "open %s/event_structures/configuration\n\n" alloy_path;
   Format.fprintf fmt "pred output { \n";
   Format.fprintf fmt "    some disj %s : E | \n    " (String.concat ", " (List.map show_event events));
 
@@ -153,4 +153,6 @@ let print_alloy fmt events labels rels =
 
   Format.fprintf fmt "\n   and some MaxConfig\n";
   Format.fprintf fmt "}\n";
+
+  Format.fprintf fmt "\n\nrun output for %d\n" (List.length events);
   ()

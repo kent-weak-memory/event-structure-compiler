@@ -69,6 +69,8 @@ let rec translate_statement (s: stmt) =
   | Stmts ss -> Stmts (List.map translate_statement ss)
   | Loc (stmt, ln) -> Loc (translate_statement stmt, ln)
   | Par (stmts) -> Par (List.map translate_statements stmts)
+  | ExitState (Allowed e) -> ExitState (Allowed (translate_expr e))
+  | ExitState (Forbidden e) -> ExitState (Forbidden (translate_expr e))
   | Done -> Done
 
 (* Calls replace_statement for every statement in the ast *)

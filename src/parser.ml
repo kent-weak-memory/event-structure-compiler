@@ -67,12 +67,22 @@ let rec show_exp e =
 let pp_exp fmt e =
   Format.fprintf fmt "%s" (show_exp e)
 
+type exit_state =
+  | Allowed of exp
+  | Forbidden of exp
+
+let pp_exit_state fmt exit_st =
+  match exit_st with
+  | Allowed e -> Format.fprintf fmt "expected: %a" pp_exp e
+  | Forbidden e -> Format.fprintf fmt "forbidden: %a" pp_exp e
+
 type stmt =
   | Assign of id * exp
   | Ite of exp * stmt * stmt
   | Stmts of stmt list
   | Loc of stmt * int (* for line no annotation *)
   | Par of stmt list list
+  | ExitState of exit_state
   | Done
   [@@deriving show]
 
@@ -105,9 +115,23 @@ and parse_exp (toks : T.tok_loc list) : exp * T.tok_loc list =
     (Op (e1, o, e2), toks)
   | (e1, toks) -> (e1, toks)
 
+let parse_exit_condition (toks : T.tok_loc list) =
+  match toks with
+  | (T.Allowed, ln) :: toks ->
+    let exp, toks = parse_atomic_exp toks in
+    (ExitState (Allowed exp), toks)
+  | (T.Forbidden, ln) :: toks ->
+    let exp, toks = parse_atomic_exp toks in
+    (ExitState (Forbidden exp), toks)
+  | [] -> raise (ParseError "End of file while parsing exit condition")
+  | (_,ln) :: _ -> parse_error ln "Badly formed exit constraint"
+
 let rec parse_stmt toks =
   match toks with
   | [] -> parse_error (-1) "End of file while parsing a statement"
+  | (T.Forbidden, ln) :: _ | (T.Allowed, ln) :: _ ->
+    let stmt, toks = parse_exit_condition toks in
+    (Loc (stmt, ln), toks)
   | (T.ParCmp, _) :: (T.LCurly, _) :: toks ->
     let rec parse_stmt_lists (toks) =
       match parse_stmt_list toks with
@@ -143,8 +167,7 @@ let rec parse_stmt toks =
   | (T.LCurly, ln) :: toks ->
     let (s_list, toks) = parse_stmt_list toks in
     (Loc (Stmts (s_list), ln), toks)
-  | (_,ln) :: _ ->
-    parse_error ln "Bad statement"
+  | (t,ln) :: _ -> parse_error ln ("Bad statement: " ^ (T.show_token t))
 
 (* Convert all of the statement in toks into an AST, stopping on a }. Return
    them with the left over tokens *)

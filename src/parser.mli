@@ -17,12 +17,17 @@ type exp =
 val pp_exp : Format.formatter -> exp -> unit
 val show_exp : exp -> string
 
+type exit_state =
+  | Allowed of exp
+  | Forbidden of exp
+
 type stmt =
   | Assign of id * exp
   | Ite of exp * stmt * stmt
   | Stmts of stmt list
   | Loc of stmt * int (* for line no annotation *)
   | Par of stmt list list
+  | ExitState of exit_state
   | Done
   [@@deriving show]
 

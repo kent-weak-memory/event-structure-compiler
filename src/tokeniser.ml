@@ -69,6 +69,8 @@ type token =
   | Else
   | Done
   | ParCmp
+  | Allowed
+  | Forbidden
 
 type tok_loc = (token * int)
 
@@ -131,6 +133,8 @@ let show_token t =
   | Else -> "else"
   | ParCmp -> "PAR_LIST"
   | Done -> "done"
+  | Allowed -> "allowed"
+  | Forbidden -> "forbidden"
 
 (* Tokeniser pinched from Scott Owen's example-compiler. *)
 let keywords =
@@ -139,7 +143,8 @@ let keywords =
   ("!=", Op Ne); (">=", Op Gte); ("<=", Op Lte); ("+", Op Plus);
   ("-", Op Minus); ("*", Op Times); ("/", Op Div);
   (">", Op Gt); ("<", Op Lt); (";", Semicolon); ("if", If); ("else", Else);
-  ("done", Done); ("PAR_LIST", ParCmp)]
+  ("done", Done); ("PAR_LIST", ParCmp); ("allowed", Allowed);
+  ("forbidden", Forbidden)]
 
 let keyword_map : token Strmap.t =
   List.fold_left (fun m (k,v) -> Strmap.add k v m) Strmap.empty keywords

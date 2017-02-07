@@ -28,11 +28,13 @@ open RelateEventStructure
 
 
 let print_tokens = ref false;;
+let alloy_path = ref ".";;
 let filename_ref = ref None;;
 let outfile_ref = ref None;;
 
 let options = Arg.align ([
-  ("--print-tokens", Arg.Set print_tokens, " print the tokens as they are tokenised.")
+  ("--print-tokens", Arg.Set print_tokens, " print the tokens as they are tokenised.");
+  ("--alloy-path", Arg.Set_string alloy_path, " set the path that the alloy model exists at.")
 ]);;
 
 let usage_msg = "compile.byte MP.jef"
@@ -59,7 +61,7 @@ let filename =
     filename;;
 
 let input = Std.input_file filename in
-let tokens = Tokeniser.tokenise input 0 0 in
+let tokens = Tokeniser.tokenise input 0 1 in
 
 let format_tok (a, _) =
   let fmt = (format_of_string "'%s' ") in
@@ -93,7 +95,7 @@ let output_fmt =
   | None -> Format.std_formatter
 in
 
-OutputAlloy.print_alloy output_fmt evs labs rels;;
+OutputAlloy.print_alloy output_fmt (!alloy_path) evs labs rels;;
 
 ();;
 (* let tokens = Tokeniser.tokenise  *)

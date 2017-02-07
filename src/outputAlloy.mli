@@ -18,4 +18,4 @@
 
 open RelateEventStructure
 
-val print_alloy : Format.formatter -> event list -> label list -> (event * event) list * (event * event) list -> unit
+val print_alloy : Format.formatter -> string -> event list -> label list -> (event * event) list * (event * event) list -> unit

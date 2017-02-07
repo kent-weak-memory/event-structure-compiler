@@ -24,4 +24,4 @@ type ev_r = (ev_s relation * ev_s relation) * (ev_s relation * ev_s relation * e
 type event = E of int
 type label = L of (event * ev_s)
 
-val read_es : ev_s -> event list -> label list -> (event * event) list * (event * event) list -> event list * label list * ((event * event) list * (event * event) list)
+val read_es : ev_s -> event list -> label list -> event relation * event relation -> event list * label list * (event relation * event relation)
