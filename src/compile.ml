@@ -79,6 +79,7 @@ let parsed_program = Parser.parse_program tokens in
 let translated_program = TranslateLocations.translate_statements parsed_program in
 let es = EventStructure.read_ast translated_program in
 
+let es, consts = Constraints.extract_constraints es in
 let evs, labs, rels = RelateEventStructure.read_es (EventStructure.Comp (EventStructure.Init, es)) [] [] ([],[]) in
 
 (* It's much nicer if we sort the events *)

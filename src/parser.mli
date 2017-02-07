@@ -33,5 +33,6 @@ type stmt =
 
 val show_stmt : stmt -> bytes
 val pp_stmt : Format.formatter -> stmt -> unit
+val pp_exit_state: Format.formatter -> exit_state -> unit
 
 val parse_program : T.tok_loc list -> stmt list

@@ -52,6 +52,7 @@ type ev_s =
   | Sum of (ev_s * ev_s)  (* + *)
   | Prod of (ev_s * ev_s) (* × *)
   | Comp of (ev_s * ev_s) (* · *)
+  | Const of (ev_s * exit_state list)
   | Done
   [@@deriving show]
 

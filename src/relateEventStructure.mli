@@ -18,10 +18,16 @@
 
 open Relation
 open EventStructure
+open Parser
 
 (* Order, Conflict, val, loc, zero *)
 type ev_r = (ev_s relation * ev_s relation) * (ev_s relation * ev_s relation * ev_s relation)
 type event = E of int
 type label = L of (event * ev_s)
 
-val read_es : ev_s -> event list -> label list -> event relation * event relation -> event list * label list * (event relation * event relation)
+val read_es :
+  ev_s ->
+  event list ->
+  label list ->
+  event relation * event relation ->
+  event list * label list * (event relation * event relation)

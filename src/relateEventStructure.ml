@@ -24,7 +24,7 @@ open EventStructure
 open Relation
 open Mset
 
-exception RelateEventStructure of string
+exception RelateEventStructureException of string
 
 (* ((Order, Conflict), (val, loc, zero)) *)
 type ev_r = (ev_s relation * ev_s relation) * (ev_s relation * ev_s relation * ev_s relation)
@@ -72,3 +72,6 @@ let rec read_es es events labels rels =
     let ord = (evs_l >< evs_r) ++ ord_r ++ ord_l in
     let conf = conf_l ++ conf_r in
     evs, labs, (ord, conf)
+
+  | Const (es, xs) ->
+    raise (RelateEventStructureException "Invarient violated: Constraints found in event strucure during relation stage")
