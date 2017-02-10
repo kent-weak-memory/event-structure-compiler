@@ -31,10 +31,13 @@ let print_tokens = ref false;;
 let alloy_path = ref ".";;
 let filename_ref = ref None;;
 let outfile_ref = ref None;;
+let max_value = ref 1;;
 
 let options = Arg.align ([
   ("--print-tokens", Arg.Set print_tokens, " print the tokens as they are tokenised.");
-  ("--alloy-path", Arg.Set_string alloy_path, " set the path that the alloy model exists at.")
+  ("--alloy-path", Arg.Set_string alloy_path, " set the path that the alloy model exists at.");
+  ("--values", Arg.Set_int max_value, " set the max value (V) such that the modeled V are in {0..V}");
+  ("-V", Arg.Set_int max_value, " set the max value (V) such that the modeled V are in {0..V}")
 ]);;
 
 let usage_msg = "compile.byte MP.jef"
@@ -75,9 +78,15 @@ let _ = if !print_tokens then
     true
 in
 
+let rec range x =
+  match x with
+  | x when x > 0 -> x :: (range (x - 1))
+  | x -> [x]
+in
+
 let parsed_program = Parser.parse_program tokens in
 let translated_program = TranslateLocations.translate_statements parsed_program in
-let es = EventStructure.read_ast translated_program in
+let es = EventStructure.read_ast ~values:(range !max_value) translated_program in
 
 let es, consts = Constraints.extract_constraints es in
 let evs, labs, rels = RelateEventStructure.read_es (EventStructure.Comp (EventStructure.Init, es)) [] [] ([],[]) in

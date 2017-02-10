@@ -43,8 +43,6 @@ let pp_location fmt (Loc i) =
 let pp_value fmt (Val i) =
   Format.fprintf fmt "%d" i
 
-let values = [0; 1]
-
 type ev_s =
   | Init
   | Read of (value * location * location)
@@ -129,18 +127,18 @@ and eval_exp ?(wrn_bexp=true) e rho : int =
   | Uop _ -> raise (EventStructureExp "Uops not implemented in this context.")
 
 (* TODO: I don't think this is convincing. *)
-let rec read_ast ?(ln=0) ?(rho=RegMap.empty) (ast: Parser.stmt list) =
+let rec read_ast ?(values=[0;1]) ?(ln=0) ?(rho=RegMap.empty) (ast: Parser.stmt list) =
   match ast with
   | [] -> Done
 
   | Stmts stmts :: xs ->
-    read_ast ~ln:ln ~rho:rho (stmts @ xs)
+    read_ast ~values:values ~ln:ln ~rho:rho (stmts @ xs)
 
   (* This throws away statements following the PAR. I think this is probably
      desirable under the Jeffrey model *)
   (* TODO: Joining is a place the event structure model should be extended *)
   | Par stmts :: xs ->
-    let m = List.map (read_ast ~ln:ln ~rho:rho) stmts in
+    let m = List.map (read_ast ~values:values ~ln:ln ~rho:rho) stmts in
     let _ =
       match xs with
       | [] -> ()
@@ -151,20 +149,20 @@ let rec read_ast ?(ln=0) ?(rho=RegMap.empty) (ast: Parser.stmt list) =
   (* Strip out Done *)
   (* TODO: Why do we have Done, again? *)
   | Done :: stmts ->
-    read_ast ~ln:ln ~rho:rho stmts
+    read_ast ~values:values ~ln:ln ~rho:rho stmts
 
   (* Strip out line numbers. *)
   | Loc (stmt, ln) :: stmts ->
-    read_ast ~ln:ln ~rho:rho (stmt::stmts)
+    read_ast ~values:values ~ln:ln ~rho:rho (stmt::stmts)
 
   (* Evaluate the expression given the current context to flatten out control *)
   (* Both branches will end up in the event structure because of the map for all
      possible values to be read in the read case *)
   | Ite (e, s1, s2) :: stmts ->
     if (eval_exp ~wrn_bexp:false e rho) == 1 then
-      read_ast ~ln:ln ~rho:rho (s1::stmts)
+      read_ast ~values:values ~ln:ln ~rho:rho (s1::stmts)
     else
-      read_ast ~ln:ln ~rho:rho (s2::stmts)
+      read_ast ~values:values ~ln:ln ~rho:rho (s2::stmts)
 
   (* Read *)
   | Assign (Register (r, ir), Ident Memory (s, im)) :: stmts ->
@@ -172,22 +170,22 @@ let rec read_ast ?(ln=0) ?(rho=RegMap.empty) (ast: Parser.stmt list) =
       (fun n ->
         Comp (
           Read (Val n, Loc im, Loc ir),
-          (read_ast ~ln:ln ~rho:(RegMap.add ir n rho) stmts)
+          (read_ast ~values:values ~ln:ln ~rho:(RegMap.add ir n rho) stmts)
         )
       ) values in
     sum ln sums
 
   | Assign (Register (r, ir), expr) :: stmts ->
     let k = eval_exp expr rho in
-    read_ast ~ln:ln ~rho:(RegMap.add ir k rho) stmts
+    read_ast ~values:values ~ln:ln ~rho:(RegMap.add ir k rho) stmts
 
   (* Const -> Mem Write *)
   | Assign (Memory (s, im), Num k) :: stmts ->
-    Comp (Write (Val k, Loc im), read_ast ~ln:ln ~rho:rho stmts)
+    Comp (Write (Val k, Loc im), read_ast ~values:values ~ln:ln ~rho:rho stmts)
 
   | Assign (Memory (s, im), Ident Register (i, ir)) :: stmts ->
     let k = find_in ir rho in
-    Comp (Write (Val k, Loc im), read_ast ~ln:ln ~rho:rho stmts)
+    Comp (Write (Val k, Loc im), read_ast ~values:values ~ln:ln ~rho:rho stmts)
 
   (* Mem -> Mem write *)
   | Assign (Memory (sl, iml), Ident Memory (sr, imr)) :: stmts ->
@@ -198,7 +196,7 @@ let rec read_ast ?(ln=0) ?(rho=RegMap.empty) (ast: Parser.stmt list) =
           Read (Val n, Loc imr, Loc iml),
           Comp (
             Write(Val n, Loc iml),
-            read_ast ~ln:ln ~rho:(RegMap.add imr n rho) stmts
+            read_ast ~values:values ~ln:ln ~rho:(RegMap.add imr n rho) stmts
           )
         )
       )
@@ -208,7 +206,7 @@ let rec read_ast ?(ln=0) ?(rho=RegMap.empty) (ast: Parser.stmt list) =
   (* We can evaluate expressions too, as long there are no memory locs in expr *)
   | Assign (Memory (s, im), expr) :: stmts ->
     let k = eval_exp expr rho in
-    Comp (Write (Val k, Loc im), read_ast ~ln:ln ~rho:rho stmts)
+    Comp (Write (Val k, Loc im), read_ast ~values:values ~ln:ln ~rho:rho stmts)
 
   | st ->
     let er = String.concat "\n  " (List.map (Parser.show_stmt) st) in
