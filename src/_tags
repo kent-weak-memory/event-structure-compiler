@@ -1,1 +1,1 @@
-true : package(ppx_deriving.std,extlib,str,ppx_monadic)
+true : package(ppx_deriving.std,ppx_deriving.ord,extlib,str)

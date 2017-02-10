@@ -1,14 +1,16 @@
 relation.cmo : relation.cmi
 relation.cmx : relation.cmi
-eventStructure.cmo : relation.cmi
-eventStructure.cmx : relation.cmx
+eventStructure.cmo : parser.cmi
+eventStructure.cmx : parser.cmx
 tokeniser.cmo :
 tokeniser.cmx :
 parser.cmo : tokeniser.cmo parser.cmi
 parser.cmx : tokeniser.cmx parser.cmi
-test.cmo : relation.cmi
-test.cmx : relation.cmx
-compile.cmo : translateLocations.cmi tokeniser.cmo parser.cmi ast.cmo
-compile.cmx : translateLocations.cmx tokeniser.cmx parser.cmx ast.cmx
+constraints.cmo : eventStructure.cmo
+constraints.cmx : eventStructure.cmx
+compile.cmo : translateLocations.cmi tokeniser.cmo relateEventStructure.cmi \
+    parser.cmi outputAlloy.cmi eventStructure.cmo constraints.cmo
+compile.cmx : translateLocations.cmx tokeniser.cmx relateEventStructure.cmx \
+    parser.cmx outputAlloy.cmx eventStructure.cmx constraints.cmx
 relation.cmi :
 parser.cmi : tokeniser.cmo
