@@ -84,6 +84,16 @@ let rec print_unrelated fmt f prop vals labs =
     print_unrelated fmt f prop (q::xs) labs
   | _ -> ()
 
+let location_eq (Loc a) (Loc b) =
+  a == b
+
+let rec find_reads_with_dst labels dst =
+  match labels with
+  | L (ev, Read (v, s, d)) :: xs when location_eq dst d ->
+    L (ev, Read (v, s, d)) :: find_reads_with_dst xs dst
+  | _ :: xs -> find_reads_with_dst xs dst
+  | [] -> []
+
 (* Don't look too hard, eh? *)
 let print_alloy fmt alloy_path events labels rels =
   Format.fprintf fmt "module event_structures/examples\n";

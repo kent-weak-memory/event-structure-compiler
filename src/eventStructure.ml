@@ -126,6 +126,21 @@ and eval_exp ?(wrn_bexp=true) e rho : int =
     end
   | Uop _ -> raise (EventStructureExp "Uops not implemented in this context.")
 
+let rec find_constraints (ss: Parser.stmt list) ln =
+  match ss with
+  (* Strip out line numbers *)
+  | Loc (s, ln) :: ss ->
+    find_constraints (s::ss) ln
+
+  | ExitState (exit_s) :: ss ->
+    exit_s :: find_constraints ss ln
+
+  | x::ss ->
+    Printf.printf "WARN Throwing away statements out side of parallel composition on line %d.\n" ln;
+    pp_stmt Format.std_formatter x;
+    find_constraints ss ln
+  | [] -> []
+
 (* TODO: I don't think this is convincing. *)
 let rec read_ast ?(values=[0;1]) ?(ln=0) ?(rho=RegMap.empty) (ast: Parser.stmt list) =
   match ast with
@@ -139,12 +154,10 @@ let rec read_ast ?(values=[0;1]) ?(ln=0) ?(rho=RegMap.empty) (ast: Parser.stmt l
   (* TODO: Joining is a place the event structure model should be extended *)
   | Par stmts :: xs ->
     let m = List.map (read_ast ~values:values ~ln:ln ~rho:rho) stmts in
-    let _ =
-      match xs with
-      | [] -> ()
-      | _ -> Printf.printf "WARN Throwing away statements out side of parallel composition.\n"
-    in
-    prod ln m
+    (* As we don't (currently) expect anything after parallel statements other
+       than constraints on exit states, we can assume that all the following
+       statements are just exit constraints *)
+    Const (prod ln m, find_constraints xs ln)
 
   (* Strip out Done *)
   (* TODO: Why do we have Done, again? *)
