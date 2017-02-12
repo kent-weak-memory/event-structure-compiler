@@ -41,7 +41,7 @@ Converts the input language into a list of tokens for the parser.
 
 Converts the token list formed from the input language into an AST.
 
-### Location Transltion
+### Location Translation
 - [x] Mostly done
 
 Swaps all locations for the AST for virtual memory or register locations. This
