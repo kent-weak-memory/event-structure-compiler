@@ -129,7 +129,7 @@ and eval_exp ?(wrn_bexp=true) e rho : int =
 let rec find_constraints (ss: Parser.stmt list) ln =
   match ss with
   (* Strip out line numbers *)
-  | Loc (s, ln) :: ss ->
+  | LnLoc (s, ln) :: ss ->
     find_constraints (s::ss) ln
 
   | ExitState (exit_s) :: ss ->
@@ -165,7 +165,7 @@ let rec read_ast ?(values=[0;1]) ?(ln=0) ?(rho=RegMap.empty) (ast: Parser.stmt l
     read_ast ~values:values ~ln:ln ~rho:rho stmts
 
   (* Strip out line numbers. *)
-  | Loc (stmt, ln) :: stmts ->
+  | LnLoc (stmt, ln) :: stmts ->
     read_ast ~values:values ~ln:ln ~rho:rho (stmt::stmts)
 
   (* Evaluate the expression given the current context to flatten out control *)

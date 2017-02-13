@@ -67,7 +67,7 @@ let rec translate_statement (s: stmt) =
   | Assign (i, e) -> Assign (translate_id i, translate_expr e)
   | Ite (e, s1, s2) -> Ite (translate_expr e, translate_statement s1, translate_statement s2)
   | Stmts ss -> Stmts (List.map translate_statement ss)
-  | Loc (stmt, ln) -> Loc (translate_statement stmt, ln)
+  | LnLoc (stmt, ln) -> LnLoc (translate_statement stmt, ln)
   | Par (stmts) -> Par (List.map translate_statements stmts)
   | ExitState (Allowed e) -> ExitState (Allowed (translate_expr e))
   | ExitState (Forbidden e) -> ExitState (Forbidden (translate_expr e))

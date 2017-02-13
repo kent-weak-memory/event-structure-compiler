@@ -80,7 +80,7 @@ type stmt =
   | Assign of id * exp
   | Ite of exp * stmt * stmt
   | Stmts of stmt list
-  | Loc of stmt * int (* for line no annotation *)
+  | LnLoc of stmt * int (* for line no annotation *)
   | Par of stmt list list
   | ExitState of exit_state
   | Done
@@ -131,7 +131,7 @@ let rec parse_stmt toks =
   | [] -> parse_error (-1) "End of file while parsing a statement"
   | (T.Forbidden, ln) :: _ | (T.Allowed, ln) :: _ ->
     let stmt, toks = parse_exit_condition toks in
-    (Loc (stmt, ln), toks)
+    (LnLoc (stmt, ln), toks)
   | (T.ParCmp, _) :: (T.LCurly, _) :: toks ->
     let rec parse_stmt_lists (toks) =
       match parse_stmt_list toks with
@@ -148,7 +148,7 @@ let rec parse_stmt toks =
       match toks with
       | (T.Op T.Assign, _) :: toks ->
         let (e, toks) = parse_exp toks in
-        (Loc (Assign (Source x,  e), ln), toks)
+        (LnLoc (Assign (Source x,  e), ln), toks)
       | _ -> parse_error ln "Expected '=' after identifier"
     )
   | (T.If, ln) :: toks ->
@@ -158,15 +158,15 @@ let rec parse_stmt toks =
         match parse_stmt toks with
         | (s1, (T.Else, _) :: toks) ->
           let (s2, toks) = parse_stmt toks in
-          (Loc (Ite (e, s1, s2), ln), toks)
+          (LnLoc (Ite (e, s1, s2), ln), toks)
         | (s1, _ :: toks) ->
-          (Loc (Ite (e, s1, Done), ln), toks)
+          (LnLoc (Ite (e, s1, Done), ln), toks)
         | (_, _) -> parse_error ln "Bad statement"
       )
     )
   | (T.LCurly, ln) :: toks ->
     let (s_list, toks) = parse_stmt_list toks in
-    (Loc (Stmts (s_list), ln), toks)
+    (LnLoc (Stmts (s_list), ln), toks)
   | (t,ln) :: _ -> parse_error ln ("Bad statement: " ^ (T.show_token t))
 
 (* Convert all of the statement in toks into an AST, stopping on a }. Return

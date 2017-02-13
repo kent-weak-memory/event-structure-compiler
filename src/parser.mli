@@ -25,7 +25,7 @@ type stmt =
   | Assign of id * exp
   | Ite of exp * stmt * stmt
   | Stmts of stmt list
-  | Loc of stmt * int (* for line no annotation *)
+  | LnLoc of stmt * int (* for line no annotation *)
   | Par of stmt list list
   | ExitState of exit_state
   | Done
