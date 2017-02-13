@@ -108,4 +108,3 @@ in
 OutputAlloy.print_alloy output_fmt (!alloy_path) evs labs rels;;
 
 ();;
-(* let tokens = Tokeniser.tokenise  *)

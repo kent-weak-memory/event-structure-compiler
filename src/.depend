@@ -6,8 +6,8 @@ tokeniser.cmo :
 tokeniser.cmx :
 parser.cmo : tokeniser.cmo parser.cmi
 parser.cmx : tokeniser.cmx parser.cmi
-constraints.cmo : eventStructure.cmo
-constraints.cmx : eventStructure.cmx
+constraints.cmo : parser.cmi eventStructure.cmo
+constraints.cmx : parser.cmx eventStructure.cmx
 compile.cmo : translateLocations.cmi tokeniser.cmo relateEventStructure.cmi \
     parser.cmi outputAlloy.cmi eventStructure.cmo constraints.cmo
 compile.cmx : translateLocations.cmx tokeniser.cmx relateEventStructure.cmx \

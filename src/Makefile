@@ -11,7 +11,9 @@ FILES_CMO = $(addsuffix .cmo,$(FILES))
 FILES_CMX = $(addsuffix .cmx,$(FILES))
 FILES_O = $(addsuffix .o,$(FILES))
 
-OCC_FLAGS += -bin-annot
+OCC_FLAGS = -bin-annot
+
+all: ocb-compile.byte ocb-compile.native
 
 ocb-compile.byte :
 	ocamlbuild -use-ocamlfind -package $(PACKAGES) compile.byte
@@ -23,18 +25,18 @@ compile.byte : $(FILES_CMO)
 	ocamlfind ocamlc $(OCC_FLAGS) -linkpkg -package $(PACKAGES) $(FILES_CMO) -o $@
 
 compile.native : $(FILES_CMX)
-	ocamlfind ocamlopt -linkpkg -package $(PACKAGES) $(FILES_CMX) -o $@
+	ocamlfind ocamlopt -linkpkg -package $(PACKAGES) $(FILES_CMX) $(OCC_FLAGS) -o $@
 
 %.cmi : %.mli
-	ocamlfind ocamlc $(OCC_FLAGS) -package $(PACKAGES) -bin-annot -o $@ -c $<
+	ocamlfind ocamlc -package $(PACKAGES) $(OCC_FLAGS) -o $@ -c $<
 
 %.cmo : %.ml
-	ocamlfind ocamlc $(OCC_FLAGS) -package $(PACKAGES) -bin-annot -o $@ -c $<
+	ocamlfind ocamlc -package $(PACKAGES) $(OCC_FLAGS) -o $@ -c $<
 
 %.cmx : %.ml
-	ocamlfind ocamlopt -package $(PACKAGES) -bin-annot -o $@ -c $<
+	ocamlfind ocamlopt -package $(PACKAGES) $(OCC_FLAGS) -o $@ -c $<
 
-.PHONY : depend clean
+.PHONY : depend
 
 clean :
 	ocamlbuild -clean

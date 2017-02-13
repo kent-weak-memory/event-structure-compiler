@@ -1,27 +1,14 @@
 open EventStructure
+open Parser
 
-type constraint_op =
-  Eq
-| NEq
-[@@deriving show]
+exception ConstraintException of string
 
-type constraint_ast =
-  Reg of (int * int)
-| Bop of (constraint_ast * constraint_op * constraint_ast)
-[@@deriving show]
+type const = (location * value)
+  [@@deriving show]
 
-let show_op o =
-  match o with
-  | Eq -> "=="
-  | NEq -> "!="
-
-let rec pp_constraint fmt c =
-  match c with
-  | Reg (l, v) -> Format.fprintf fmt "R(%d)%d" l v
-  | Bop (l, o, r) -> Format.fprintf fmt "%a %s %a"
-    pp_constraint l
-    (show_constraint_op o)
-    pp_constraint r
+type const_exp =
+| Expected of const
+| Unexpected of const
 
 let rec extract_constraints ev_s =
   match ev_s with
@@ -47,4 +34,20 @@ let rec extract_constraints ev_s =
     let l, cl = extract_constraints l in
     l, (exit_s @ cl)
 
-let rec compile_constraints consts reg_map = ()
+let rec translate_expression e reg_map =
+  match e with
+  | Op (Ident (Register (_, ri)), T.Eq, Num v) ->
+    let loc = find_in ri reg_map in
+    (EventStructure.Loc loc, Val v)
+  | Op (Ident (_), _, _) ->
+    raise (ConstraintException "Constraints must only be on register values")
+  | _ ->
+    raise (ConstraintException "Malformed constraint")
+
+let rec compile_constraints consts reg_map =
+  match consts with
+  | Allowed e :: xs ->
+    Expected (translate_expression e reg_map) :: compile_constraints xs reg_map
+  | Forbidden e :: xs ->
+    Unexpected (translate_expression e reg_map) :: compile_constraints xs reg_map
+  | [] -> []
