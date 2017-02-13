@@ -6,3 +6,6 @@ src/oUnit-suite*
 *.cmt
 *.cmti
 *.cmi
+# Binaries
+src/*.native
+src/*.byte
