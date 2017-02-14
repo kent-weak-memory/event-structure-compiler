@@ -1,2 +1,2 @@
-PKG oUnit extlib ppx_deriving.ord ppx_deriving.show
+PKG extlib ppx_deriving.ord ppx_deriving.show
 B _build

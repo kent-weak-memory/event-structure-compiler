@@ -95,7 +95,7 @@ let rec find_reads_with_dst labels dst =
   | [] -> []
 
 (* Don't look too hard, eh? *)
-let print_alloy fmt alloy_path events labels rels =
+let print_alloy fmt alloy_path events labels rels req =
   Format.fprintf fmt "module event_structures/examples\n";
   Format.fprintf fmt "open %s/event_structures/event_structure\n" alloy_path;
   Format.fprintf fmt "open %s/event_structures/configuration\n\n" alloy_path;
@@ -159,9 +159,15 @@ let print_alloy fmt alloy_path events labels rels =
 
 
   let z = ev_with (same_value) 0 labels in
-  Format.fprintf fmt "   and %s in MemoryEventStructure.zero" (show_event (strip_label z));
+  Format.fprintf fmt "   and %s in MemoryEventStructure.zero\n" (show_event (strip_label z));
 
-  Format.fprintf fmt "\n   and some MaxConfig\n";
+  Format.fprintf fmt "   and some MaxConfig\n";
+  let req = List.map strip_label req in
+  Format.fprintf fmt "   and (%s) in MaxConfig.c_ev\n" (
+      String.concat "+" (List.map show_event req)
+  );
+
+
   Format.fprintf fmt "}\n";
 
   Format.fprintf fmt "\n\nrun output for %d\n" (List.length events);

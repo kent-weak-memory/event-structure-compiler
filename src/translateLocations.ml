@@ -77,6 +77,6 @@ let rec translate_statement (s: stmt) =
 (* Sag Alloo *)
 and translate_statements stmts = List.map translate_statement stmts
 
-let t_stmts_vm stmts =
+let translate_statements_vm stmts =
   let x = translate_statements stmts in
-  (x, var_map)
+  (x, !var_map)

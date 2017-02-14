@@ -19,4 +19,4 @@
 open RelateEventStructure
 open Relation
 
-val print_alloy : Format.formatter -> string -> event list -> label list -> event relation * event relation -> unit
+val print_alloy : Format.formatter -> string -> event list -> label list -> event relation * event relation -> label list -> unit
