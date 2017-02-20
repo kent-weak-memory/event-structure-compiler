@@ -33,8 +33,9 @@ OUTPUT_FILES = $(addsuffix .xml,$(TESTS))
 all: $(OUTPUT_FILES)
 
 %.als: %.jef
+	mkdir -p ../xml/$(subst .als,,$@)/
 	$(EVC) $(EVC_FLAGS) $< $@ || \
-		echo "Failed to compile" > ../xml/$(subst .als,,$@)/error.out 
+		echo "Failed to compile" > ../xml/$(subst .als,,$@)/error.out
 
 %.xml: %.als
 	mkdir -p ../xml/$(subst .als,,$<)/
