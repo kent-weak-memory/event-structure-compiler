@@ -1,0 +1,20 @@
+//Java causality test case 17
+{
+  PAR_LIST
+    {
+      r3 = x
+      if(r3 != 42){
+        x = 42
+      } else{}
+      r1 = x
+      y = r1
+    }
+
+    {
+      r2 = y
+      x = r2
+    }
+
+}
+
+//Allowed: (r1 == r2 == r3 == 42;)

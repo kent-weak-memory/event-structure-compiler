@@ -1,0 +1,32 @@
+//Java causality test case 15
+{
+  //x and y should be volatile
+  PAR_LIST
+    {
+      r0 = x
+      if(r0 == 1){
+        r1 = a
+      } else {
+        r1 = 0
+      }
+      if(r1 == 0){
+        y = 1
+      } else{
+        b = 1
+      }
+    }
+
+    {
+      do {
+        r2 = y
+        r3 = b
+      } while((r2 + r3) == 0)
+      a = 1
+    }
+
+    {
+      x = 1
+    }
+}
+
+//Forbidden: (r0 == r1 == r3 == 1; r2 == 0)

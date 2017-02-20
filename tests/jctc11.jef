@@ -1,0 +1,19 @@
+//Java causality test case 11
+{
+  PAR_LIST
+    {
+      r1 = z
+      w = r1
+      r2 = x
+      y = r2
+    }
+
+    {
+      r4 = w
+      r3 = y
+      z = r3
+      x = 1
+    }
+}
+
+//Allowed: (r1 == r2 == r3 == r4 == 1;)

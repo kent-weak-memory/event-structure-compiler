@@ -1,0 +1,17 @@
+//Java causality test case 4
+{
+  x = 0
+  y = 0
+  PAR_LIST
+    {
+      r1 = x
+      y = r1
+    }
+
+    {
+      r2 = y
+      x = r2
+    }
+}
+
+forbidden ((r1 == 1) && (r2 == 1))

@@ -1,0 +1,25 @@
+//Java causality test case 19
+{
+  PAR_LIST
+    {
+      join thread 3
+      r1 = x
+      y = r1
+
+    }
+
+    {
+      r2 = y
+      x = r2
+    }
+
+    {
+      r3 = x
+      if(r3 != 42){
+        x = 42
+      } else {}
+    }
+
+}
+
+//Allowed: (r1 == r2 == r3 == 42;)

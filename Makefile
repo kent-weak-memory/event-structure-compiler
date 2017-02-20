@@ -1,8 +1,10 @@
-.PHONY: $(ALLOY_BIN) wickersonComparator all
+.PHONY: all $(ALLOY_BIN) $(COMPILER_BIN)
 
 ALLOY_BIN = alloystar/dist/alloy4.2.jar
 COMPARATOR_BIN = ./comparator.native
 COMPILER_BIN = ./src/compile.native
+
+all: $(ALLOY_BIN) $(COMPILER_BIN)
 
 $(ALLOY_BIN):
 	opam install xml-light
@@ -10,13 +12,9 @@ $(ALLOY_BIN):
 	cd alloystar && git checkout extra_features
 	make -C alloystar
 
-$(COMPARATOR_BIN):
-	make -C comparator
-
-$(COMPILER_BIN): wickersonComparator
+$(COMPILER_BIN):
 	make -C src
 
 clean:
 	make -C src clean
-	make -C comparator clean
-	make -C alloystar clean
+	rm -f $(ALLOY_BIN)

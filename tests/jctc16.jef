@@ -1,0 +1,16 @@
+//Java causality test case 16
+{
+  PAR_LIST
+    {
+      r1 = x
+      x = 1
+    }
+
+    {
+      r2 = x
+      x = 2
+    }
+
+}
+
+//Allowed: (r1 == 2; r2 == 1)

@@ -1,0 +1,21 @@
+//Java causality test case 12
+{
+  //non-zero inits
+  a[0] = 1
+  a[1] = 2
+
+  PAR_LIST
+    {
+      r1 = x
+      a[r1] = 0
+      r2 = a[0]
+      y = r2
+    }
+
+    {
+      r3 = y
+      x = r3
+    }
+}
+
+//Forbidden: (r1 == r2 == r3 == 1;)
