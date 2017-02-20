@@ -17,5 +17,8 @@
  *)
 
 open Parser
+open String
+module VarMap : Map.S with type key = string
 
 val translate_statements: stmt list -> stmt list
+val translate_statements_vm: stmt list -> (stmt list * int VarMap.t)
