@@ -1,6 +1,10 @@
 //Java causality test case 15
 {
   //x and y should be volatile
+  x = 0
+  y = 0
+  a = 0
+  b = 0
   PAR_LIST
     {
       r0 = x
@@ -30,3 +34,5 @@
 }
 
 //Forbidden: (r0 == r1 == r3 == 1; r2 == 0)
+forbidden ((r0 == 1) && (r1 == 1) && (r3 == 1))
+//forbidden (r2 == 0)

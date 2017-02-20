@@ -1,6 +1,9 @@
 //Java causality test case 14
 {
   //y should be volatile, not sure on while loops
+  a = 0
+  b = 0
+  y = 0
   PAR_LIST
     {
       r1 = a
@@ -21,3 +24,5 @@
 }
 
 //Forbidden: (r1 == r3 == 1; r2 == 0)
+forbidden ((r1==1) and (r3==1))
+// forbidden (r2==0)

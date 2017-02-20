@@ -1,5 +1,8 @@
 //Java causality test case 7
 {
+  x = 0
+  y = 0
+  z = 0
   PAR_LIST
     {
       r1 = z
@@ -15,3 +18,4 @@
 }
 
 //Allowed: (r1 == r2 == r3 == 1;)
+allowed ((r1 == 1) && (r2 == 1) && (r3 == 1))
