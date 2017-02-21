@@ -11,3 +11,4 @@ src/oUnit-suite*
 
 # Test output
 xml/
+tests/*.als

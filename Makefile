@@ -15,6 +15,9 @@ $(ALLOY_BIN):
 $(COMPILER_BIN):
 	make -C src
 
+test:
+	make -C tests
+
 clean:
 	make -C src clean
 	rm -f $(ALLOY_BIN)
