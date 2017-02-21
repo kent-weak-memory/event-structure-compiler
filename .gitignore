@@ -1,4 +1,4 @@
-src/*.byte
+# Binaries
 src/_build
 src/oUnit-suite*
 *.cxo
@@ -6,6 +6,8 @@ src/oUnit-suite*
 *.cmt
 *.cmti
 *.cmi
-# Binaries
-src/*.native
-src/*.byte
+*.byte
+*.byte
+
+# Test output
+xml/
