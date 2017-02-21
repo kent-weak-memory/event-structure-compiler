@@ -80,6 +80,7 @@ let rec compile_constraints consts var_map =
     Unexpected (translate_expression e var_map) :: compile_constraints xs var_map
   | [] -> []
 
+(* TODO: This is naive and assumes that no register is written twice, which is probably untrue *)
 let rec find_satisfying labels consts =
   let rec get_my_satisfaction labels const =
     let (Loc l', Val v') = const in
@@ -92,7 +93,9 @@ let rec find_satisfying labels consts =
 
   match consts with
   | (Expected es) :: xs ->
-    (List.flatten (List.map (get_my_satisfaction labels) es)) @ find_satisfying labels xs
+      let candidates = List.map (get_my_satisfaction labels) es in
+      candidates @ find_satisfying labels xs
   | (Unexpected es) :: xs ->
-    (List.flatten (List.map (get_my_satisfaction labels) es)) @ find_satisfying labels xs
+      let candidates = List.map (get_my_satisfaction labels) es in
+      candidates @ find_satisfying labels xs
   | [] -> []

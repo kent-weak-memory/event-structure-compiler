@@ -107,8 +107,17 @@ in
 
 
 
+let rec n_cartesian_product l =
+  match l with
+  | [] -> [[]]
+  | h :: t ->
+      let rest = n_cartesian_product t in
+      List.concat
+        (List.map (fun i -> List.map (fun r -> i :: r) rest) h)
+in
+
 let consts = Constraints.compile_constraints consts val_map in
-let required_labels = Constraints.find_satisfying labs consts in
+let required_labels = n_cartesian_product (Constraints.find_satisfying labs consts) in
 
 
 OutputAlloy.print_alloy output_fmt (!alloy_path) evs labs rels required_labels;;

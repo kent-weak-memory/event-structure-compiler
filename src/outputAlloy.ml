@@ -162,11 +162,19 @@ let print_alloy fmt alloy_path events labels rels req =
   Format.fprintf fmt "   and %s in MemoryEventStructure.zero\n" (show_event (strip_label z));
 
   Format.fprintf fmt "   and some MaxConfig\n";
-  let req = List.map strip_label req in
-  Format.fprintf fmt "   and (%s) in MaxConfig.c_ev\n" (
-      String.concat "+" (List.map show_event req)
-  );
+  Format.fprintf fmt "   and (";
+  let rec print_constraints fmt cs =
+    match cs with
+    | [] -> []
+    | c::cs ->
+      let r = List.map strip_label c in
+      Format.asprintf "((%s) in MaxConfig.c_ev)" (
+          String.concat "+" (List.map show_event r)
+      ) :: print_constraints fmt cs
+  in
 
+  Format.fprintf fmt "%s" ((String.concat "\n    and ") (print_constraints fmt req));
+  Format.fprintf fmt ")\n\n";
 
   Format.fprintf fmt "}\n";
 
