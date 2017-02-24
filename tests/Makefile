@@ -1,7 +1,7 @@
 EVC = ../src/compile.byte
 EVC_FLAGS = --alloy-path ../../alloy
 RUN_ALLOY = ../runalloy.sh
-SOLVER = plingeling
+SOLVER = glucose
 OS = amd64-linux
 
 TESTS = jctc1 \
@@ -29,7 +29,7 @@ SOURCE_FILES = $(addsuffix .jef,$(TESTS))
 ALLOY_FILES = $(addsuffix .als,$(TESTS))
 OUTPUT_FILES = $(addsuffix .xml,$(TESTS))
 .PRECIOUS: $(ALLOY_FILES)
-	
+
 .PHONY: all
 all: $(OUTPUT_FILES)
 
