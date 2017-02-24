@@ -7,7 +7,7 @@ src/oUnit-suite*
 *.cmti
 *.cmi
 *.byte
-*.byte
+*.native
 
 # Test output
 xml/
