@@ -85,7 +85,7 @@ let rec range x =
 in
 
 let parsed_program = Parser.parse_program tokens in
-let translated_program, val_map = TranslateLocations.translate_statements_vm parsed_program in
+let translated_program, var_map = TranslateLocations.translate_statements_vm parsed_program in
 let es = EventStructure.read_ast ~values:(range !max_value) translated_program in
 
 let es, consts = Constraints.extract_constraints es in
@@ -116,10 +116,10 @@ let rec n_cartesian_product l =
         (List.map (fun i -> List.map (fun r -> i :: r) rest) h)
 in
 
-let consts = Constraints.compile_constraints consts val_map in
+let consts = Constraints.compile_constraints consts var_map in
 let required_labels = n_cartesian_product (Constraints.find_satisfying labs consts) in
 
 
-OutputAlloy.print_alloy output_fmt (!alloy_path) evs labs rels required_labels;;
+OutputAlloy.print_alloy output_fmt var_map (!alloy_path) evs labs rels required_labels;;
 
 ();;
