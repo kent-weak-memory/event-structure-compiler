@@ -1,1 +1,1 @@
-true : package(ppx_deriving.std,ppx_deriving.ord,extlib,str)
+true : package(ppx_deriving.std,ppx_deriving.ord,extlib,str,ocamlgraph)

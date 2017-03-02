@@ -30,7 +30,7 @@ type fence_type =
   | Acq
   | Rel_Acq
   | Rlx
-  [@@deriving show]
+  [@@deriving show, eq]
 
 type op =
   | Lt
@@ -46,11 +46,11 @@ type op =
   | Minus
   | Times
   | Div
-  [@@deriving show]
+  [@@deriving show, eq]
 
 type uop =
   Not
-  [@@deriving show]
+  [@@deriving show, eq]
 
 type token =
   | Read
@@ -71,6 +71,7 @@ type token =
   | ParCmp
   | Allowed
   | Forbidden
+  [@@deriving eq]
 
 type tok_loc = (token * int)
 

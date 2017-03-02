@@ -35,7 +35,10 @@ open Parser
 exception EventStructureExp of string
 
 type value = Val of int
+  [@@deriving eq]
+
 type location = Loc of int
+  [@@deriving eq]
 
 let pp_location fmt (Loc i) =
   Format.fprintf fmt "%d" i
@@ -52,7 +55,7 @@ type ev_s =
   | Comp of (ev_s * ev_s) (* · *)
   | Const of (ev_s * exit_state list)
   | Done
-  [@@deriving show]
+  [@@deriving show, eq]
 
 let rec prod ln ev_s =
   match ev_s with

@@ -29,7 +29,13 @@ exception RelateEventStructureException of string
 (* ((Order, Conflict), (val, loc, zero)) *)
 type ev_r = (ev_s relation * ev_s relation) * (ev_s relation * ev_s relation * ev_s relation)
 type event = E of int
+  [@@deriving eq]
+
 type label = L of (event * ev_s)
+  [@@deriving eq]
+
+let equal_label (L (E ev_a, _)) (L (E ev_b, _)) =
+  ev_a == ev_b
 
 let event_ordinal = ref 0
 

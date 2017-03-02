@@ -95,6 +95,11 @@ let find_locations labs =
     | _ -> -1
   ) labs))
 
+let is_init x =
+  match x with
+  | EventStructure.Init -> true
+  | _ -> false
+
 let find_values labs =
   Mset.make_proper (List.filter ((!=) (-1)) (List.map (fun (L (_, es)) ->
     match es with
@@ -114,12 +119,19 @@ let strip_label (L (ev, _)) = ev
 
 let rec print_unrelated fmt f prop var_map vals labs =
   match vals with
-  | p::q::xs ->
-    let a = ev_with f p labs in
-    let b = ev_with f q labs in
-    Format.fprintf fmt "    and %s->%s not in MemoryEventStructure.%s\n"
-      (show_event labs var_map (strip_label a)) (show_event labs var_map (strip_label b)) prop;
-    print_unrelated fmt f prop var_map (q::xs) labs
+  | p::xs ->
+    let h = ev_with f p labs in
+    let a = List.filter (fun x ->
+      let L(_, y) = x in
+      not (f p x) &&  not (is_init y)
+    ) labs in
+    let _ = List.map (fun x ->
+      Format.fprintf fmt "    and %s->%s not in MemoryEventStructure.%s\n"
+        (show_event labs var_map (strip_label h))
+        (show_event labs var_map (strip_label x))
+        prop
+    ) a in
+    print_unrelated fmt f prop var_map xs labs
   | _ -> ()
 
 let location_eq (Loc a) (Loc b) =

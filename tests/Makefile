@@ -23,28 +23,33 @@ TESTS = jctc1 \
 	jctc17 \
 	jctc18 \
 	jctc19 \
-	jctc20 \
+	jctc20
 
 SOURCE_FILES = $(addsuffix .jef,$(TESTS))
 ALLOY_FILES = $(addsuffix .als,$(TESTS))
-OUTPUT_FILES = $(addsuffix .xml,$(TESTS))
-.PRECIOUS: $(ALLOY_FILES)
+ISABELLE_FILES = $(addsuffix .thy,$(TESTS))
+OUTPUT_FILES = $(addsuffix .xml,$(TESTS)) $(ISABELLE_FILES)
+TIMEOUT = 3600 # 1 hour timeout
+
+.PRECIOUS: $(ALLOY_FILES) $(ISABELLE_FILES)
 
 .PHONY: all
 all: $(OUTPUT_FILES)
+isabelle: $(ISABELLE_FILES)
 
 %.als: %.jef
 	mkdir -p ../xml/$(subst .als,,$@)/
 	$(EVC) $(EVC_FLAGS) $< $@ || \
 		echo "Failed to compile" > ../xml/$(subst .als,,$@)/error.out
 
+%.thy: %.jef
+	- $(EVC) $(EVC_FLAGS) $< $@
+
 %.xml: %.als
 	mkdir -p ../xml/$(subst .als,,$<)/
-	@ cd ../alloystar && \
-			SOLVER=$(SOLVER) $(RUN_ALLOY) ../tests/$< 0 ../xml/$(subst .als,,$<)/ $(OS) > ../xml/$(subst .als,,$<)/alloy.out || \
-			echo "No instance found" > ../xml/$(subst .als,,$<)/result
+	@cd ../alloystar && SOLVER=$(SOLVER) timeout $(TIMEOUT) $(RUN_ALLOY) ../tests/$< 0 ../xml/$(subst .als,,$<) $(OS) || echo "Timeout" > ../xml/$(subst .als,,$<)/result
 
 
 clean:
-	rm -rf $(ALLOY_FILES)
+	rm -rf $(ALLOY_FILES) $(ISABELLE_FILES)
 	rm -rf ../xml

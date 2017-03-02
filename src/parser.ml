@@ -33,13 +33,13 @@ type memory_fence = MFence
 type location =
   | MemLoc of int
   | RegLoc of int
-  [@deriving ord, show]
+  [@deriving ord, show, eq]
 
 type id =
   | Source of string
   | Register of string * int
   | Memory of string * int
-  [@deriving show]
+  [@deriving show, eq]
 
 let show_id id =
   match id with
@@ -50,12 +50,19 @@ let show_id id =
 let pp_id fmt id =
   Format.fprintf fmt "%s" (show_id id)
 
+let equal_id ida idb =
+  match (ida, idb) with
+  | (Source sa, Source sb) -> sa == sb
+  | (Register (sa, ia), Register (sb, ib)) | (Memory (sa, ia), Memory (sb, ib)) ->
+    (sa == sb) && (ia == ib)
+  | _ -> false
+
 type exp =
   | Ident of id
   | Num of int
   | Op of exp * T.op * exp
   | Uop of T.uop * exp
-  [@@deriving show]
+  [@@deriving show, eq]
 
 let rec show_exp e =
   match e with
@@ -70,6 +77,13 @@ let pp_exp fmt e =
 type exit_state =
   | Allowed of exp
   | Forbidden of exp
+  [@@deriving eq]
+
+let equal_exit_state es_a es_b =
+  match (es_a, es_b) with
+  | (Allowed e1, Allowed e2) | (Forbidden e1, Forbidden e2) ->
+    e1 == e2
+  | (_, _) -> false
 
 let pp_exit_state fmt exit_st =
   match exit_st with

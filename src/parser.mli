@@ -20,6 +20,7 @@ val show_exp : exp -> string
 type exit_state =
   | Allowed of exp
   | Forbidden of exp
+  [@@deriving eq]
 
 type stmt =
   | Assign of id * exp

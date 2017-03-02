@@ -31,5 +31,4 @@
 }
 
 //Forbidden: (r1 == r2 == 1; r3 ==0;)
-forbidden ((r1==1) && (r2==1))
-// forbidden (r3==1)
+forbidden (((r1==1) && (r2==1)) && (r3 == 0))

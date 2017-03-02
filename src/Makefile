@@ -1,6 +1,6 @@
 PACKAGES = ppx_deriving.show,ppx_deriving.ord,extlib,str
 
-FILES = location virtualMap relation eventStructure tokeniser parser constraints compile
+FILES = location virtualMap relation eventStructure tokeniser parser constraints outputAlloy outputIsabelle compile
 
 FILES_ML = $(addsuffix .ml,$(FILES))
 FILES_MLI = $(addsuffix .mli,$(FILES))
