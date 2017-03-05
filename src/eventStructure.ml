@@ -192,9 +192,9 @@ let rec read_ast ?(values=[0;1]) ?(ln=0) ?(rho=RegMap.empty) (ast: Parser.stmt l
         )
       ) values in
     pc := !pc @ List.map (fun n ->
-      Read (Val 0, Loc im, Loc ir),
+      Read (Val (List.hd values), Loc im, Loc ir),
       Read (Val n, Loc im, Loc ir)
-    ) (List.tl (List.rev values));
+    ) (List.tl values);
     sum ln sums
 
   | Assign (Register (r, ir), expr) :: stmts ->
@@ -226,7 +226,7 @@ let rec read_ast ?(values=[0;1]) ?(ln=0) ?(rho=RegMap.empty) (ast: Parser.stmt l
     pc := !pc @ List.map (fun n ->
       Read (Val (List.hd values), Loc imr, Loc iml),
       Read (Val n, Loc imr, Loc iml)
-    ) (List.tl (List.rev values));
+    ) (List.tl values);
     sum ln sums
 
   (* We can evaluate expressions too, as long there are no memory locs in expr *)

@@ -125,27 +125,40 @@ let required_labels = n_cartesian_product (Constraints.find_satisfying labs cons
 let test_name = Filename.chop_extension (Filename.basename filename) in
 
 
-let rec find_label e labs =
+(* let rec find_label e labs =
   match labs with
   | (L (_, ev) as lab)::labs when
     EventStructure.equal_ev_s e ev -> lab
   | _::labs -> find_label e labs
   | [] -> raise (CompileException "PANIC")
+in *)
+
+
+let rec find_label e labs lbs =
+  match labs with
+  | (L (_, ev) as lab)::labs when
+    EventStructure.equal_ev_s e ev -> (lbs@labs, lab)
+  | l::labs -> find_label e labs (l::lbs)
+  | []-> raise (CompileException "PANIC")
 in
 
 let pc = EventStructure.get_pc () in
-let pc = List.map (fun (l, r) ->
-    let L(E l, _) = find_label l labs in
-    let L(E r, _) = find_label r labs in
-    (E l, E r)
-) pc in
+let rec build_pc labels pc =
+  match pc with
+  | (l, r)::pcs ->
+    let labels, L(E l, _) = find_label l labels [] in
+    let labels, L(E r, _) = find_label r labels [] in
+    (E l, E r) :: build_pc labels pcs
+  | [] -> []
+in
+let pc = build_pc labs pc in
 
 match !outfile_ref with
 | Some out_filename ->
   begin
   match Filename.extension out_filename with
   | ".thy" ->
-    OutputIsabelle.print_isabelle output_fmt (!long_names) var_map test_name evs labs rels required_labels
+    OutputIsabelle.print_isabelle output_fmt (!long_names) var_map test_name evs labs rels pc required_labels
   | ".als" ->
     OutputAlloy.print_alloy output_fmt var_map (!alloy_path) evs labs rels required_labels
   | ".dot" ->
@@ -154,7 +167,7 @@ match !outfile_ref with
     Printf.printf "Unknown output type: `%s'.\n" s
   end
 | None ->
-  OutputIsabelle.print_isabelle output_fmt (!long_names) var_map test_name evs labs rels required_labels
+  OutputIsabelle.print_isabelle output_fmt (!long_names) var_map test_name evs labs rels pc required_labels
 ;;
 
 ();;

@@ -1,7 +1,5 @@
 //Java causality test case 9
 {
-  x = 0
-  y = 0
   PAR_LIST
     {
       r1 = x

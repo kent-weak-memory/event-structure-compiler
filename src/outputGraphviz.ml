@@ -88,11 +88,18 @@ let rec find_reads_with_dst labels dst =
 let print_graphviz fmt long var_map test_name events labels rels pc req =
   Format.fprintf fmt "digraph %s\n" test_name;
   Format.fprintf fmt "{\n";
+  Format.fprintf fmt "  node[shape=box];\n";
+  Format.fprintf fmt "  graph[nodesep=\"0.8\"];\n";
   let order, conflict = rels in
   Format.fprintf fmt "  %s\n" (String.concat "\n  " (List.map (show_relation ("O", "black") long labels var_map)
     (transitive_reduction order)));
   Format.fprintf fmt "  %s\n" (String.concat "\n  " (List.map (show_birelation ("PC", "red") long labels var_map)
     (remove_reflexive pc)));
+  let _ = List.map (fun (l, r) ->
+    Format.fprintf fmt "  {rank=same; %s %s}\n"
+    (show_event long labels var_map l)
+    (show_event long labels var_map r)
+  ) pc in
   Format.fprintf fmt "}";
 
   ()

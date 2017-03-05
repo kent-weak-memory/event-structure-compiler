@@ -1,10 +1,6 @@
 //Java causality test case 15
 {
   //x and y should be volatile
-  x = 0
-  y = 0
-  a = 0
-  b = 0
   PAR_LIST
     {
       r0 = x

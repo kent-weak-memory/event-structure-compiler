@@ -1,5 +1,6 @@
 EVC = ../src/compile.byte
 EVC_FLAGS = --alloy-path ../../alloy
+EVC_DOT_FLAGS = --long-names
 RUN_ALLOY = ../runalloy.sh
 SOLVER = glucose
 OS = amd64-linux
@@ -28,6 +29,8 @@ TESTS = jctc1 \
 SOURCE_FILES = $(addsuffix .jef,$(TESTS))
 ALLOY_FILES = $(addsuffix .als,$(TESTS))
 ISABELLE_FILES = $(addsuffix .thy,$(TESTS))
+DOT_FILES = $(addsuffix .dot,$(TESTS))
+PNG_FILES = $(addsuffix .png,$(TESTS))
 OUTPUT_FILES = $(addsuffix .xml,$(TESTS)) $(ISABELLE_FILES)
 TIMEOUT = 3600 # 1 hour timeout
 
@@ -36,14 +39,21 @@ TIMEOUT = 3600 # 1 hour timeout
 .PHONY: all
 all: $(OUTPUT_FILES)
 isabelle: $(ISABELLE_FILES)
+graphviz: $(PNG_FILES)
 
 %.als: %.jef
 	mkdir -p ../xml/$(subst .als,,$@)/
 	$(EVC) $(EVC_FLAGS) $< $@ || \
 		echo "Failed to compile" > ../xml/$(subst .als,,$@)/error.out
 
+%.dot: %.jef
+	- $(EVC) $(EVC_FLAGS) $(EVC_DOT_FLAGS) $< $@
+
 %.thy: %.jef
 	- $(EVC) $(EVC_FLAGS) $< $@
+
+%.png: %.dot
+	dot -Tpng $< -o $@
 
 %.xml: %.als
 	mkdir -p ../xml/$(subst .als,,$<)/
@@ -51,5 +61,5 @@ isabelle: $(ISABELLE_FILES)
 
 
 clean:
-	rm -rf $(ALLOY_FILES) $(ISABELLE_FILES)
+	rm -rf $(ALLOY_FILES) $(ISABELLE_FILES) $(DOT_FILES) $(PNG_FILES)
 	rm -rf ../xml

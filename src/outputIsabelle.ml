@@ -61,7 +61,7 @@ let show_label var_map label =
 let show_relation long labs var_map (left, right) =
   Format.sprintf "(%s, %s)" (show_event long labs var_map left) (show_event long labs var_map right)
 
-let print_isabelle fmt long var_map test_name events labels rels req =
+let print_isabelle fmt long var_map test_name events labels rels pc req =
   Format.fprintf fmt "theory %s\n" test_name;
   Format.fprintf fmt "imports EventStructures String\n";
   Format.fprintf fmt "begin\n\n";
@@ -71,7 +71,7 @@ let print_isabelle fmt long var_map test_name events labels rels req =
 
   let order, conflict = rels in
   Format.fprintf fmt "    partial_order =  λx y. (x,y) ∈ { %s },\n" (String.concat ", " (List.map (show_relation long labels var_map) (transitive_reduction order)));
-  Format.fprintf fmt "    primitive_conflict =  λx y. (x,y) ∈ { %s },\n" (String.concat ", " (List.map (show_relation long labels var_map) conflict));
+  Format.fprintf fmt "    primitive_conflict =  λx y. (x,y) ∈ { %s },\n" (String.concat ", " (List.map (show_relation long labels var_map) (remove_reflexive pc)));
   Format.fprintf fmt "    label_function = λx.\n";
   let lab_function_body = List.map (fun (L (event, node)) ->
     Format.sprintf "if x = %s then Label %s" (show_event long labels var_map event) (show_label var_map (L (event, node)))
@@ -81,7 +81,7 @@ let print_isabelle fmt long var_map test_name events labels rels req =
   Format.fprintf fmt "        else Label %s\n" (show_label var_map (List.hd labels));
 
   Format.fprintf fmt "⦈\"\n\n";
-  Format.fprintf fmt "value \"∀ V ∈ { %s } . ∃e∈event_set %s. justifies_event (label_function %s e) (label_function %s V)\""
-    (String.concat ", " (List.map (show_event long labels var_map) events)) test_name test_name test_name;
+  Format.fprintf fmt "value \"∀ V ∈ event_set %s . ∃e∈event_set %s. justifies_event (label_function %s e) (label_function %s V)\""
+    test_name test_name test_name test_name;
 
   ()

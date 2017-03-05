@@ -1,7 +1,5 @@
 //Java causality test case 19
 {
-  x = 0
-  y = 0
   PAR_LIST
     {
       join thread 3
