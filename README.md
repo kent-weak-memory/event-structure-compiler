@@ -10,6 +10,11 @@ are derived from [Scott Owens' example
 compiler](https://github.com/SOwens/example-compiler), notably the tokeniser and
 parser. See COPYING for the full license text.
 
+## Language support
+
+This supports an abstraction of C like programming languages. It currently does
+not support loops. Loop support will be implemented by loop unrolling soon.
+
 ## Building
 
 As with Scott's compiler from which this is derived, you'll need a handful of
@@ -68,7 +73,7 @@ This should provide various useful outputs built from the relational
 representations.
 
 #### Isabelle
-- [ ] Work in progress
+- [x] Done
 
 To go into Jon's work on a formal Isabelle definition of event structures.
 
@@ -78,9 +83,6 @@ To go into Jon's work on a formal Isabelle definition of event structures.
 To go into my work on modelling an event structure memory model in Alloy.
 
 #### DOT
-- [ ] Work in progress
+- [x] Done
 
 Output for display of an event structure.
-
-#### Adga
-To go into Alan Jeffrey's orginal event structure memory model artifact.
