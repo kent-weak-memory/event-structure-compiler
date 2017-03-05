@@ -93,11 +93,14 @@ let es = EventStructure.read_ast ~values:(range !max_value) translated_program i
 let es, consts = Constraints.extract_constraints es in
 let evs, labs, rels = RelateEventStructure.read_es (EventStructure.Comp (EventStructure.Init, es)) [] [] ([],[]) in
 
-(* It's much nicer if we sort the events *)
+(* It's much nicer if we sort the events and labels *)
 let labs = List.sort (fun (L ((E a), _)) (L ((E b), _)) ->
   compare a b
 ) labs in
 
+let evs = List.sort (fun (E a) (E b) ->
+  compare a b
+) evs in
 
 let output_fmt =
   match !outfile_ref with
@@ -106,8 +109,6 @@ let output_fmt =
     Format.make_formatter (Pervasives.output oc) (fun () -> Pervasives.flush oc)
   | None -> Format.std_formatter
 in
-
-
 
 let rec n_cartesian_product l =
   match l with
