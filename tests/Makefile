@@ -1,5 +1,6 @@
 EVC = ../src/compile.byte
-EVC_FLAGS = --alloy-path ../../alloy
+EVC_FLAGS =
+EVC_ALLOY_FLAGS = --alloy-path ../../alloy
 EVC_DOT_FLAGS = --long-names
 RUN_ALLOY = ../runalloy.sh
 SOLVER = glucose
@@ -31,7 +32,8 @@ ALLOY_FILES = $(addsuffix .als,$(TESTS))
 ISABELLE_FILES = $(addsuffix .thy,$(TESTS))
 DOT_FILES = $(addsuffix .dot,$(TESTS))
 PNG_FILES = $(addsuffix .png,$(TESTS))
-OUTPUT_FILES = $(addsuffix .xml,$(TESTS)) $(ISABELLE_FILES)
+ALLOY_TESTS = $(addsuffix .xml,$(TESTS))
+OUTPUT_FILES = $(ISABELLE_FILES)
 TIMEOUT = 3600 # 1 hour timeout
 
 .PRECIOUS: $(ALLOY_FILES) $(ISABELLE_FILES)
@@ -40,10 +42,12 @@ TIMEOUT = 3600 # 1 hour timeout
 all: $(OUTPUT_FILES)
 isabelle: $(ISABELLE_FILES)
 graphviz: $(PNG_FILES)
+alloy: $(ALLOY_FILES)
+alloy_test: $(ALLOY_TESTS)
 
 %.als: %.jef
 	mkdir -p ../xml/$(subst .als,,$@)/
-	$(EVC) $(EVC_FLAGS) $< $@ || \
+	$(EVC) $(EVC_FLAGS) $(EVC_ALLOY_FLAGS) $< $@ || \
 		echo "Failed to compile" > ../xml/$(subst .als,,$@)/error.out
 
 %.dot: %.jef
@@ -53,7 +57,7 @@ graphviz: $(PNG_FILES)
 	- $(EVC) $(EVC_FLAGS) $< $@
 
 %.png: %.dot
-	dot -Tpng $< -o $@
+	- dot -Tpng $< -o $@
 
 %.xml: %.als
 	mkdir -p ../xml/$(subst .als,,$<)/
