@@ -23,48 +23,28 @@ open OutputHelpers
 
 exception IsabelleOutputException of string
 
+let rec show_event_long labs var_map (E id) =
+  match labs with
+  | L (E eid, Read (Val v, Loc src, Loc dst)) :: _ when id = eid ->
+    let src_loc = find_loc var_map src in
+    let dst_loc = find_loc var_map dst in
+    Format.sprintf "''%s_R%s%d_%s''" (pick_char id) src_loc v dst_loc
 
-let rec show_event long labs var_map (E id) =
+  | L (E eid, Write (Val v, Loc dst)) :: _ when id == eid ->
+    let dst_loc = find_loc var_map dst in
+    Format.sprintf "''%s_W%s%d''" (pick_char id) dst_loc v
+
+  | L (E eid, Init) :: _ when id == eid ->
+    Format.sprintf "''%s''" (pick_char id)
+  | _ :: xs -> show_event_long xs var_map (E id)
+  | [] ->
+    raise (IsabelleOutputException "Event found with no matching label. Labels are incomplete.")
+
+
+let show_event long labs var_map (E id) =
   match long with
-  | true ->
-    begin
-    match labs with
-    | L (E eid, Read (Val v, Loc src, Loc dst)) :: _ when id = eid ->
-      let src_loc = find_loc var_map src in
-      let dst_loc = find_loc var_map dst in
-
-      if (id + (Char.code 'a') - 1) < (Char.code 'x') then
-        Format.sprintf "''%s_R%s%d_%s''"
-          (Char.escaped (Char.chr (id + (Char.code 'a') - 1)))
-          src_loc
-          v
-          dst_loc
-      else
-        Format.sprintf "''x%d_R%s%d_%s''" id src_loc v dst_loc
-    | L (E eid, Write (Val v, Loc dst)) :: _ when id == eid ->
-      let dst_loc = find_loc var_map dst in
-      if (id + (Char.code 'a') - 1) < (Char.code 'x') then
-        Format.sprintf "''%s_W%s%d''"
-          (Char.escaped (Char.chr (id + (Char.code 'a') - 1)))
-          dst_loc
-          v
-      else
-        Format.sprintf "''x%d_W%s%d''" id dst_loc v
-    | L (E eid, Init) :: _ when id == eid ->
-      Format.sprintf "''%s''" (if (id + (Char.code 'a') - 1) < (Char.code 'x') then
-        Char.escaped (Char.chr (id + (Char.code 'a') - 1))
-      else
-        String.concat "" ["x"; string_of_int id])
-    | _ :: xs -> show_event long xs var_map (E id)
-    | [] ->
-      raise (IsabelleOutputException "Event found with no matching label. Labels are incomplete.")
-    end
-  | false ->
-    if (id + (Char.code 'a') - 1) < (Char.code 'x') then
-      Format.sprintf "''%s''"
-        (Char.escaped (Char.chr (id + (Char.code 'a') - 1)))
-    else
-      Format.sprintf "''x%d''" id
+  | true -> show_event_long labs var_map (E id)
+  | false -> Format.sprintf "''%s''"(pick_char id)
 
 let show_label var_map label =
   match label with
@@ -90,7 +70,7 @@ let print_isabelle fmt long var_map test_name events labels rels req =
   Format.fprintf fmt "    event_set = { %s },\n" (String.concat ", " (List.map (show_event long labels var_map) events));
 
   let order, conflict = rels in
-  Format.fprintf fmt "    partial_order =  λx y. (x,y) ∈ { %s },\n" (String.concat ", " (List.map (show_relation long labels var_map) order));
+  Format.fprintf fmt "    partial_order =  λx y. (x,y) ∈ { %s },\n" (String.concat ", " (List.map (show_relation long labels var_map) (transitive_reduction order)));
   Format.fprintf fmt "    primitive_conflict =  λx y. (x,y) ∈ { %s },\n" (String.concat ", " (List.map (show_relation long labels var_map) conflict));
   Format.fprintf fmt "    label_function = λx.\n";
   let lab_function_body = List.map (fun (L (event, node)) ->

@@ -24,43 +24,24 @@ open OutputHelpers
 
 exception GraphvizOutputException of string
 
-let rec show_event long labs var_map (E id) =
-  match long with
-  | true ->
-    begin
-    match labs with
-    | L (E eid, Read (Val v, Loc src, Loc dst)) :: _ when id = eid ->
-      let src_loc = find_loc var_map src in
-      let dst_loc = find_loc var_map dst in
+let rec show_event_long labs var_map (E id) =
+  match labs with
+  | L (E eid, Read (Val v, Loc src, Loc dst)) :: _ when id = eid ->
+    let src_loc = find_loc var_map src in
+    let dst_loc = find_loc var_map dst in
+    Format.sprintf "\"%s: R%s%d %s\"" (pick_char id) src_loc v dst_loc
+  | L (E eid, Write (Val v, Loc dst)) :: _ when id == eid ->
+    let dst_loc = find_loc var_map dst in
+    Format.sprintf "\"%s: W%s%d\"" (pick_char id) dst_loc v
+  | L (E eid, Init) :: _ when id == eid -> "Init"
+  | _ :: xs -> show_event_long xs var_map (E id)
+  | [] ->
+    raise (GraphvizOutputException "Event found with no matching label. Labels are incomplete.")
 
-      if (id + (Char.code 'a') - 1) < (Char.code 'x') then
-        Format.sprintf "\"%s: R%s%d %s\""
-          (Char.escaped (Char.chr (id + (Char.code 'a') - 1)))
-          src_loc
-          v
-          dst_loc
-      else
-        Format.sprintf "\"x%d: R%s%d %s\"" id src_loc v dst_loc
-    | L (E eid, Write (Val v, Loc dst)) :: _ when id == eid ->
-      let dst_loc = find_loc var_map dst in
-      if (id + (Char.code 'a') - 1) < (Char.code 'x') then
-        Format.sprintf "\"%s: W%s%d\""
-          (Char.escaped (Char.chr (id + (Char.code 'a') - 1)))
-          dst_loc
-          v
-      else
-        Format.sprintf "\"x%d: W%s%d\"" id dst_loc v
-    | L (E eid, Init) :: _ when id == eid -> "Init"
-    | _ :: xs -> show_event long xs var_map (E id)
-    | [] ->
-      raise (GraphvizOutputException "Event found with no matching label. Labels are incomplete.")
-    end
-  | false ->
-    if (id + (Char.code 'a') - 1) < (Char.code 'x') then
-      Format.sprintf "\"%s\""
-        (Char.escaped (Char.chr (id + (Char.code 'a') - 1)))
-    else
-      Format.sprintf "\"x%d\"" id
+let show_event long labs var_map (E id) =
+  match long with
+  | true -> show_event_long labs var_map (E id)
+  | false -> Format.sprintf "\"%s\"" (pick_char id)
 
 let show_label var_map label =
   match label with

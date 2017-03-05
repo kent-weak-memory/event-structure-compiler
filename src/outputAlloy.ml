@@ -29,29 +29,12 @@ let rec show_event labs var_map (E id) =
   | L (E eid, Read (Val v, Loc src, Loc dst)) :: _ when id = eid ->
     let src_loc = find_loc var_map src in
     let dst_loc = find_loc var_map dst in
-
-    if (id + (Char.code 'a') - 1) < (Char.code 'x') then
-      Format.sprintf "%s_R%s%d_%s"
-        (Char.escaped (Char.chr (id + (Char.code 'a') - 1)))
-        src_loc
-        v
-        dst_loc
-    else
-      Format.sprintf "x%d_R%s%d_%s" id src_loc v dst_loc
+    Format.sprintf "%s_R%s%d_%s" (pick_char id) src_loc v dst_loc
   | L (E eid, Write (Val v, Loc dst)) :: _ when id == eid ->
     let dst_loc = find_loc var_map dst in
-    if (id + (Char.code 'a') - 1) < (Char.code 'x') then
-      Format.sprintf "%s_W%s%d"
-        (Char.escaped (Char.chr (id + (Char.code 'a') - 1)))
-        dst_loc
-        v
-    else
-      Format.sprintf "x%d_W%s%d" id dst_loc v
+    Format.sprintf "%s_W%s%d" (pick_char id) dst_loc v
   | L (E eid, Init) :: _ when id == eid ->
-    if (id + (Char.code 'a') - 1) < (Char.code 'x') then
-      Char.escaped (Char.chr (id + (Char.code 'a') - 1))
-    else
-      String.concat "" ["x"; string_of_int id]
+    pick_char id
   | _ :: xs -> show_event xs var_map (E id)
   | [] ->
     raise (AlloyOutputException "Event found with no matching label. Labels are incomplete.")

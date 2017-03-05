@@ -56,6 +56,12 @@ let remove_reflexive edges =
   in
   rm_reflexive edges []
 
+let pick_char id =
+  if (id + (Char.code 'a') - 1) < (Char.code 'x') then
+    (Char.escaped (Char.chr (id + (Char.code 'a') - 1)))
+  else
+    "x" ^ (string_of_int id)
+
 let find_loc var_map loc =
   let bindings = VarMap.bindings var_map in
   let (loc_s, _) = List.hd (List.filter (fun (_, li) -> if li == loc then true else false) bindings) in
