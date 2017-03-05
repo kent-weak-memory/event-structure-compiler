@@ -19,4 +19,4 @@
 open RelateEventStructure
 open Relation
 
-val print_graphviz : Format.formatter -> bool -> int TranslateLocations.VarMap.t -> string -> event list -> label list -> event relation * event relation -> label list list -> unit
+val print_graphviz : Format.formatter -> bool -> int TranslateLocations.VarMap.t -> string -> event list -> label list -> event relation * event relation -> event relation-> label list list -> unit
