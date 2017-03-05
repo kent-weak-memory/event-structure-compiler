@@ -19,43 +19,22 @@
 open RelateEventStructure
 open TranslateLocations
 open EventStructure
+open OutputHelpers
 
 
 exception AlloyOutputException of string
-
-let find_loc var_map loc =
-  let bindings = VarMap.bindings var_map in
-  let (loc_s, _) = List.hd (List.filter (fun (_, li) -> if li == loc then true else false) bindings) in
-  loc_s
 
 let rec show_event labs var_map (E id) =
   match labs with
   | L (E eid, Read (Val v, Loc src, Loc dst)) :: _ when id = eid ->
     let src_loc = find_loc var_map src in
     let dst_loc = find_loc var_map dst in
-
-    if (id + (Char.code 'a') - 1) < (Char.code 'x') then
-      Format.sprintf "%s_R%s%d_%s"
-        (Char.escaped (Char.chr (id + (Char.code 'a') - 1)))
-        src_loc
-        v
-        dst_loc
-    else
-      Format.sprintf "x%d_R%s%d_%s" id src_loc v dst_loc
+    Format.sprintf "%s_R%s%d_%s" (pick_char id) src_loc v dst_loc
   | L (E eid, Write (Val v, Loc dst)) :: _ when id == eid ->
     let dst_loc = find_loc var_map dst in
-    if (id + (Char.code 'a') - 1) < (Char.code 'x') then
-      Format.sprintf "%s_W%s%d"
-        (Char.escaped (Char.chr (id + (Char.code 'a') - 1)))
-        dst_loc
-        v
-    else
-      Format.sprintf "x%d_W%s%d" id dst_loc v
+    Format.sprintf "%s_W%s%d" (pick_char id) dst_loc v
   | L (E eid, Init) :: _ when id == eid ->
-    if (id + (Char.code 'a') - 1) < (Char.code 'x') then
-      Char.escaped (Char.chr (id + (Char.code 'a') - 1))
-    else
-      String.concat "" ["x"; string_of_int id]
+    pick_char id
   | _ :: xs -> show_event xs var_map (E id)
   | [] ->
     raise (AlloyOutputException "Event found with no matching label. Labels are incomplete.")
@@ -75,47 +54,11 @@ let show_label var_map label =
 let show_relation labs var_map (left, right) =
   String.concat "->" [show_event labs var_map left; show_event labs var_map right]
 
-let same_location l (L (_, es)) =
-  match es with
-  | Read (_, Loc loc, _) when loc == l -> true
-  | Write (_, Loc loc) when loc == l -> true
-  | _ -> false
-
-let same_value v (L (_, es)) =
-  match es with
-  | Read (Val vl, _, _) when vl == v -> true
-  | Write (Val vl, _) when vl == v -> true
-  | _ -> false
-
-let find_locations labs =
-  Mset.make_proper (List.filter ((!=) (-1)) (List.map (fun (L (_, es)) ->
-    match es with
-    | Read (_, Loc loc, _) -> loc
-    | Write (_, Loc loc) -> loc
-    | _ -> -1
-  ) labs))
-
-let is_init x =
-  match x with
-  | EventStructure.Init -> true
-  | _ -> false
-
-let find_values labs =
-  Mset.make_proper (List.filter ((!=) (-1)) (List.map (fun (L (_, es)) ->
-    match es with
-    | Read (Val vl, _, _) -> vl
-    | Write (Val vl, _) -> vl
-    | Init -> 0
-    | _ -> -1
-  ) labs))
-
 let rec ev_with f v labs =
   match labs with
   | x::xs when (f v x) -> x
   | _::xs -> ev_with f v xs
   | [] -> raise (AlloyOutputException "invarient violated in alloy output")
-
-let strip_label (L (ev, _)) = ev
 
 let rec print_unrelated fmt f prop var_map vals labs =
   match vals with
@@ -133,16 +76,6 @@ let rec print_unrelated fmt f prop var_map vals labs =
     ) a in
     print_unrelated fmt f prop var_map xs labs
   | _ -> ()
-
-let location_eq (Loc a) (Loc b) =
-  a == b
-
-let rec find_reads_with_dst labels dst =
-  match labels with
-  | L (ev, Read (v, s, d)) :: xs when location_eq dst d ->
-    L (ev, Read (v, s, d)) :: find_reads_with_dst xs dst
-  | _ :: xs -> find_reads_with_dst xs dst
-  | [] -> []
 
 (* Don't look too hard, eh? *)
 let print_alloy fmt var_map alloy_path events labels rels req =
