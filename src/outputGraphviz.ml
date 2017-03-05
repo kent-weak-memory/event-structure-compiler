@@ -181,26 +181,14 @@ let remove_reflexive edges =
   rm_reflexive edges []
 
 (* Don't look too hard, eh? *)
-let print_graphviz fmt long var_map test_name events labels rels req =
+let print_graphviz fmt long var_map test_name events labels rels pc req =
   Format.fprintf fmt "digraph %s\n" test_name;
   Format.fprintf fmt "{\n";
   let order, conflict = rels in
-  Format.fprintf fmt "  %s\n" (String.concat "\n  " (List.map (show_relation ("O", "orange") long labels var_map) (transitive_reduction order)));
-  Format.fprintf fmt "  %s\n" (String.concat "\n  " (List.map (show_birelation ("C", "grey") long labels var_map) (remove_reflexive conflict)));
-  Format.fprintf fmt "  %s" (String.concat "\n  " (List.map (show_relation ("PC", "red") long labels var_map)
-    (build_pc events (transitive_closure order) (transitive_closure conflict))));
-   (*
-  Format.fprintf fmt "    label_function = λx.\n";
-  let lab_function_body = List.map (fun (L (event, node)) ->
-    Format.sprintf "if x = %s then Label %s" (show_event long labels var_map event) (show_label var_map (L (event, node)))
-  ) (List.tl labels) in
-
-  Format.fprintf fmt "        %s\n" (String.concat "\n        else " lab_function_body);
-  Format.fprintf fmt "        else Label %s\n" (show_label var_map (List.hd labels));
-
-  Format.fprintf fmt "⦈\"\n\n";
-  Format.fprintf fmt "value \"∀ V ∈ { %s } . ∃e∈event_set %s. justifies_event (label_function %s e) (label_function %s V)\""
-    (String.concat ", " (List.map (show_event long labels var_map) events)) test_name test_name test_name; *)
+  Format.fprintf fmt "  %s\n" (String.concat "\n  " (List.map (show_relation ("O", "black") long labels var_map)
+    (transitive_reduction order)));
+  Format.fprintf fmt "  %s\n" (String.concat "\n  " (List.map (show_birelation ("PC", "red") long labels var_map)
+    (remove_reflexive pc)));
   Format.fprintf fmt "}";
 
   ()

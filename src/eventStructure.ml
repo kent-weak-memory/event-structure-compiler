@@ -57,6 +57,9 @@ type ev_s =
   | Done
   [@@deriving show, eq]
 
+let pc = ref []
+let get_pc () = !pc
+
 let rec prod ln ev_s =
   match ev_s with
   | [] -> raise (EventStructureExp ("bad input on line " ^ string_of_int ln))
@@ -163,7 +166,6 @@ let rec read_ast ?(values=[0;1]) ?(ln=0) ?(rho=RegMap.empty) (ast: Parser.stmt l
     Const (prod ln m, find_constraints xs ln)
 
   (* Strip out Done *)
-  (* TODO: Why do we have Done, again? *)
   | Done :: stmts ->
     read_ast ~values:values ~ln:ln ~rho:rho stmts
 
@@ -189,6 +191,10 @@ let rec read_ast ?(values=[0;1]) ?(ln=0) ?(rho=RegMap.empty) (ast: Parser.stmt l
           (read_ast ~values:values ~ln:ln ~rho:(RegMap.add ir n rho) stmts)
         )
       ) values in
+    pc := !pc @ List.map (fun n ->
+      Read (Val 0, Loc im, Loc ir),
+      Read (Val n, Loc im, Loc ir)
+    ) (List.tl (List.rev values));
     sum ln sums
 
   | Assign (Register (r, ir), expr) :: stmts ->
@@ -217,6 +223,10 @@ let rec read_ast ?(values=[0;1]) ?(ln=0) ?(rho=RegMap.empty) (ast: Parser.stmt l
         )
       )
     values in
+    pc := !pc @ List.map (fun n ->
+      Read (Val (List.hd values), Loc imr, Loc iml),
+      Read (Val n, Loc imr, Loc iml)
+    ) (List.tl (List.rev values));
     sum ln sums
 
   (* We can evaluate expressions too, as long there are no memory locs in expr *)

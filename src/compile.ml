@@ -26,6 +26,7 @@
 
 open RelateEventStructure
 
+exception CompileException of string
 
 let print_tokens = ref false;;
 let alloy_path = ref ".";;
@@ -121,6 +122,23 @@ in
 let consts = Constraints.compile_constraints consts var_map in
 let required_labels = n_cartesian_product (Constraints.find_satisfying labs consts) in
 let test_name = Filename.chop_extension (Filename.basename filename) in
+
+
+let rec find_label e labs =
+  match labs with
+  | (L (_, ev) as lab)::labs when
+    EventStructure.equal_ev_s e ev -> lab
+  | _::labs -> find_label e labs
+  | [] -> raise (CompileException "PANIC")
+in
+
+let pc = EventStructure.get_pc () in
+let pc = List.map (fun (l, r) ->
+    let L(E l, _) = find_label l labs in
+    let L(E r, _) = find_label r labs in
+    (E l, E r)
+) pc in
+
 match !outfile_ref with
 | Some out_filename ->
   begin
@@ -130,7 +148,7 @@ match !outfile_ref with
   | ".als" ->
     OutputAlloy.print_alloy output_fmt var_map (!alloy_path) evs labs rels required_labels
   | ".dot" ->
-    OutputGraphviz.print_graphviz output_fmt (!long_names) var_map test_name evs labs rels required_labels
+    OutputGraphviz.print_graphviz output_fmt (!long_names) var_map test_name evs labs rels pc required_labels
   | s ->
     Printf.printf "Unknown output type: `%s'.\n" s
   end
