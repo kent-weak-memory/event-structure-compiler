@@ -12,3 +12,6 @@ src/oUnit-suite*
 # Test output
 xml/
 tests/*.als
+tests/*.thy
+tests/*.dot
+tests/*.png
