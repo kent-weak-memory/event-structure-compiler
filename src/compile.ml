@@ -121,7 +121,9 @@ let rec n_cartesian_product l =
 in
 
 let consts = Constraints.compile_constraints consts var_map in
-let required_labels = n_cartesian_product (Constraints.find_satisfying labs consts) in
+let (exp, forb) = Constraints.find_satisfying labs consts ([], []) in
+let expected_labels = n_cartesian_product exp in
+let forbidden_labels = n_cartesian_product forb in
 let test_name = Filename.chop_extension (Filename.basename filename) in
 
 
@@ -158,16 +160,16 @@ match !outfile_ref with
   begin
   match Filename.extension out_filename with
   | ".thy" ->
-    OutputIsabelle.print_isabelle output_fmt (!long_names) var_map test_name evs labs rels pc required_labels
+    OutputIsabelle.print_isabelle output_fmt (!long_names) var_map test_name evs labs rels pc (expected_labels, forbidden_labels)
   | ".als" ->
-    OutputAlloy.print_alloy output_fmt var_map (!alloy_path) evs labs rels required_labels
+    OutputAlloy.print_alloy output_fmt var_map (!alloy_path) evs labs rels (exp @ forb)
   | ".dot" ->
-    OutputGraphviz.print_graphviz output_fmt (!long_names) var_map test_name evs labs rels pc required_labels
+    OutputGraphviz.print_graphviz output_fmt (!long_names) var_map test_name evs labs rels pc []
   | s ->
     Printf.printf "Unknown output type: `%s'.\n" s
   end
 | None ->
-  OutputIsabelle.print_isabelle output_fmt (!long_names) var_map test_name evs labs rels pc required_labels
+  OutputIsabelle.print_isabelle output_fmt (!long_names) var_map test_name evs labs rels pc (expected_labels, forbidden_labels)
 ;;
 
 ();;

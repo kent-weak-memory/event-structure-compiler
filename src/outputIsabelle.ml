@@ -61,7 +61,7 @@ let show_label var_map label =
 let show_relation long labs var_map (left, right) =
   Format.sprintf "(%s, %s)" (show_event long labs var_map left) (show_event long labs var_map right)
 
-let print_isabelle fmt long var_map test_name events labels rels pc req =
+let print_isabelle fmt long var_map test_name events labels rels pc (expected_labels, forbidden_labels) =
   Format.fprintf fmt "theory %s\n" test_name;
   Format.fprintf fmt "imports EventStructures String\n";
   Format.fprintf fmt "begin\n\n";
@@ -81,7 +81,28 @@ let print_isabelle fmt long var_map test_name events labels rels pc req =
   Format.fprintf fmt "        else Label %s\n" (show_label var_map (List.hd labels));
 
   Format.fprintf fmt "⦈\"\n\n";
-  Format.fprintf fmt "value \"∀ V ∈ event_set %s . ∃e∈event_set %s. justifies_event (label_function %s e) (label_function %s V)\""
-    test_name test_name test_name test_name;
 
+  let rec print_constraints fmt cs =
+    match cs with
+    | [] -> []
+    | c::cs ->
+      let r = List.map strip_label c in
+      Format.asprintf "%s" (
+          String.concat ", " (List.map (show_event long labels var_map) r)
+      ) :: print_constraints fmt cs
+  in
+
+  Format.fprintf fmt "definition %s_expected_results :: \"string set set\" where \n" test_name;
+  Format.fprintf fmt "\"%s_expected_results = { {%s} }\"\n\n" test_name ((String.concat "}, {") (print_constraints fmt expected_labels));
+
+  Format.fprintf fmt "definition %s_forbiden_results :: \"string set set\" where \n" test_name;
+  Format.fprintf fmt "\"%s_expected_results = { {%s} }\"\n\n" test_name ((String.concat "}, {") (print_constraints fmt forbidden_labels));
+
+  Format.fprintf fmt "value \"∀ V ∈ event_set %s . \n" test_name;
+  Format.fprintf fmt "  ∃ e ∈event_set %s . justifies_event (label_function %s e) (label_function %s V)\"\n\n"
+    test_name test_name test_name;
+
+  Format.fprintf fmt "theorem \"∀ exp ∈ %s_expected_results .\n" test_name;
+  Format.fprintf fmt "  ∃ cand_Config . (exp ⊆ cand_Config) ∧ (well_justified jctc6 cand_Config)\"\n";
+  Format.fprintf fmt "sorry\n";
   ()
