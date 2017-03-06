@@ -61,29 +61,6 @@ let show_relation (label, color) long labs var_map (left, right) =
 let show_birelation (label, color) long labs var_map (left, right) =
   Format.sprintf "%s -> %s [label=\"%s\", color=\"%s\", dir=both]" (show_event long labs var_map left) (show_event long labs var_map right) label color
 
-let rec cross xs ys =
-  match xs with
-  | [] -> []
-  | x::xs -> (List.map (fun y -> (x, y)) ys) @ cross xs ys
-
-let build_pc events order conflict =
-  List.filter (fun (d, e) ->
-    List.mem (d, e) (List.filter (fun (b, c) ->
-      List.mem (d, e) conflict &&
-      List.mem (c, e) order &&
-      List.mem (b, c) conflict &&
-      (b == d && c == e)
-    ) (cross events events))
-  ) (cross events events)
-
-let rec find_reads_with_dst labels dst =
-  match labels with
-  | L (ev, Read (v, s, d)) :: xs when location_eq dst d ->
-    L (ev, Read (v, s, d)) :: find_reads_with_dst xs dst
-  | _ :: xs -> find_reads_with_dst xs dst
-  | [] -> []
-
-
 (* Don't look too hard, eh? *)
 let print_graphviz fmt long var_map test_name events labels rels pc req =
   Format.fprintf fmt "digraph %s\n" test_name;
