@@ -5,7 +5,7 @@ OS=$4
 
 if [ -z "$JAVA_HEAP_SIZE" ]
 then
-    continue
+  echo Heap size not set
 else
     SET_MAX_HEAP_SIZE="-Xmx$JAVA_HEAP_SIZE"
 fi
@@ -30,4 +30,5 @@ java \
     -Dsolver=$SOLVER  `# using given solver`                  \
     -Dcmd=$CMD        `# run nth command in file`             \
     edu/mit/csail/sdg/alloy4whole/RunAlloy                    \
-    $ALS_FILE
+    $ALS_FILE > $XML_DIR/alloy.out \
+    || echo "No instance found" >> $XML_DIR/result
