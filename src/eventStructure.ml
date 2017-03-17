@@ -153,13 +153,13 @@ let rec read_ast ?(values=[0;1]) ?(ln=0) ?(rho=RegMap.empty) (ast: Parser.stmt l
   | [] -> Done
 
   | Stmts stmts :: xs ->
-    read_ast ~values:values ~ln:ln ~rho:rho (stmts @ xs)
+    read_ast ~values ~ln ~rho (stmts @ xs)
 
   (* This throws away statements following the PAR. I think this is probably
      desirable under the Jeffrey model *)
   (* TODO: Joining is a place the event structure model should be extended *)
   | Par stmts :: xs ->
-    let m = List.map (read_ast ~values:values ~ln:ln ~rho:rho) stmts in
+    let m = List.map (read_ast ~values ~ln ~rho) stmts in
     (* As we don't (currently) expect anything after parallel statements other
        than constraints on exit states, we can assume that all the following
        statements are just exit constraints *)
@@ -167,20 +167,20 @@ let rec read_ast ?(values=[0;1]) ?(ln=0) ?(rho=RegMap.empty) (ast: Parser.stmt l
 
   (* Strip out Done *)
   | Done :: stmts ->
-    read_ast ~values:values ~ln:ln ~rho:rho stmts
+    read_ast ~values ~ln ~rho stmts
 
   (* Strip out line numbers. *)
   | LnLoc (stmt, ln) :: stmts ->
-    read_ast ~values:values ~ln:ln ~rho:rho (stmt::stmts)
+    read_ast ~values ~ln ~rho (stmt::stmts)
 
   (* Evaluate the expression given the current context to flatten out control *)
   (* Both branches will end up in the event structure because of the map for all
      possible values to be read in the read case *)
   | Ite (e, s1, s2) :: stmts ->
     if (eval_exp ~wrn_bexp:false e rho) == 1 then
-      read_ast ~values:values ~ln:ln ~rho:rho (s1::stmts)
+      read_ast ~values ~ln ~rho (s1::stmts)
     else
-      read_ast ~values:values ~ln:ln ~rho:rho (s2::stmts)
+      read_ast ~values ~ln ~rho (s2::stmts)
 
   (* Read *)
   | Assign (Register (r, ir), Ident Memory (s, im)) :: stmts ->
@@ -188,7 +188,7 @@ let rec read_ast ?(values=[0;1]) ?(ln=0) ?(rho=RegMap.empty) (ast: Parser.stmt l
       (fun n ->
         Comp (
           Read (Val n, Loc im, Loc ir),
-          (read_ast ~values:values ~ln:ln ~rho:(RegMap.add ir n rho) stmts)
+          (read_ast ~values ~ln ~rho:(RegMap.add ir n rho) stmts)
         )
       ) values in
     pc := !pc @ List.map (fun n ->
@@ -199,15 +199,15 @@ let rec read_ast ?(values=[0;1]) ?(ln=0) ?(rho=RegMap.empty) (ast: Parser.stmt l
 
   | Assign (Register (r, ir), expr) :: stmts ->
     let k = eval_exp expr rho in
-    read_ast ~values:values ~ln:ln ~rho:(RegMap.add ir k rho) stmts
+    read_ast ~values ~ln ~rho:(RegMap.add ir k rho) stmts
 
   (* Const -> Mem Write *)
   | Assign (Memory (s, im), Num k) :: stmts ->
-    Comp (Write (Val k, Loc im), read_ast ~values:values ~ln:ln ~rho:rho stmts)
+    Comp (Write (Val k, Loc im), read_ast ~values ~ln ~rho stmts)
 
   | Assign (Memory (s, im), Ident Register (i, ir)) :: stmts ->
     let k = find_in ir rho in
-    Comp (Write (Val k, Loc im), read_ast ~values:values ~ln:ln ~rho:rho stmts)
+    Comp (Write (Val k, Loc im), read_ast ~values ~ln ~rho stmts)
 
   (* Mem -> Mem write *)
   | Assign (Memory (sl, iml), Ident Memory (sr, imr)) :: stmts ->
@@ -218,7 +218,7 @@ let rec read_ast ?(values=[0;1]) ?(ln=0) ?(rho=RegMap.empty) (ast: Parser.stmt l
           Read (Val n, Loc imr, Loc iml),
           Comp (
             Write(Val n, Loc iml),
-            read_ast ~values:values ~ln:ln ~rho:(RegMap.add imr n rho) stmts
+            read_ast ~values ~ln ~rho:(RegMap.add imr n rho) stmts
           )
         )
       )
@@ -232,7 +232,7 @@ let rec read_ast ?(values=[0;1]) ?(ln=0) ?(rho=RegMap.empty) (ast: Parser.stmt l
   (* We can evaluate expressions too, as long there are no memory locs in expr *)
   | Assign (Memory (s, im), expr) :: stmts ->
     let k = eval_exp expr rho in
-    Comp (Write (Val k, Loc im), read_ast ~values:values ~ln:ln ~rho:rho stmts)
+    Comp (Write (Val k, Loc im), read_ast ~values ~ln ~rho stmts)
 
   | st ->
     let er = String.concat "\n  " (List.map (Parser.show_stmt) st) in
