@@ -126,22 +126,12 @@ let expected_labels = n_cartesian_product exp in
 let forbidden_labels = n_cartesian_product forb in
 let test_name = Filename.chop_extension (Filename.basename filename) in
 
-
-(* let rec find_label e labs =
-  match labs with
-  | (L (_, ev) as lab)::labs when
-    EventStructure.equal_ev_s e ev -> lab
-  | _::labs -> find_label e labs
-  | [] -> raise (CompileException "PANIC")
-in *)
-
-
 let rec find_label e labs lbs =
   match labs with
   | (L (_, ev) as lab)::labs when
     EventStructure.equal_ev_s e ev -> (lbs@labs, lab)
   | l::labs -> find_label e labs (l::lbs)
-  | []-> raise (CompileException "PANIC")
+  | []-> raise (CompileException "Internal compiler error, labels appear incomplete.")
 in
 
 let pc = EventStructure.get_pc () in

@@ -95,8 +95,8 @@ let print_isabelle fmt long var_map test_name events labels rels pc (expected_la
   Format.fprintf fmt "definition %s_expected_results :: \"string set set\" where \n" test_name;
   Format.fprintf fmt "\"%s_expected_results = { {%s} }\"\n\n" test_name ((String.concat "}, {") (print_constraints fmt expected_labels));
 
-  Format.fprintf fmt "definition %s_forbiden_results :: \"string set set\" where \n" test_name;
-  Format.fprintf fmt "\"%s_forbiden_results = { {%s} }\"\n\n" test_name ((String.concat "}, {") (print_constraints fmt forbidden_labels));
+  Format.fprintf fmt "definition %s_forbidden_results :: \"string set set\" where \n" test_name;
+  Format.fprintf fmt "\"%s_forbidden_results = { {%s} }\"\n\n" test_name ((String.concat "}, {") (print_constraints fmt forbidden_labels));
 
   Format.fprintf fmt "value \"∀ V ∈ event_set %s . \n" test_name;
   Format.fprintf fmt "  ∃ e ∈event_set %s . justifies_event (label_function %s e) (label_function %s V)\"\n\n"
