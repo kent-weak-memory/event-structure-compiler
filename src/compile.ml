@@ -155,6 +155,8 @@ match !outfile_ref with
     OutputAlloy.print_alloy output_fmt var_map (!alloy_path) evs labs rels (exp @ forb)
   | ".dot" ->
     OutputGraphviz.print_graphviz output_fmt (!long_names) var_map test_name evs labs rels pc []
+  | ".tikz" | ".tex" ->
+    OutputTikz.print_tikz output_fmt (!long_names) var_map test_name evs labs rels pc []
   | s ->
     Printf.printf "Unknown output type: `%s'.\n" s
   end
