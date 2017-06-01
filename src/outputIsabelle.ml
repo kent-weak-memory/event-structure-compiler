@@ -44,7 +44,7 @@ let rec show_event_long labs var_map (E id) =
 let show_event long labs var_map (E id) =
   match long with
   | true -> show_event_long labs var_map (E id)
-  | false -> Format.sprintf "''%s''"(pick_char id)
+  | false -> string_of_int id
 
 let show_label var_map label =
   match label with
@@ -65,7 +65,10 @@ let print_isabelle fmt long var_map test_name events labels rels pc (expected_la
   Format.fprintf fmt "theory %s\n" test_name;
   Format.fprintf fmt "imports EventStructures String\n";
   Format.fprintf fmt "begin\n\n";
-  Format.fprintf fmt "definition %s :: \"string event_structure\" where\n" test_name;
+
+  let evs_type = if long then "string" else "nat" in
+
+  Format.fprintf fmt "definition %s :: \"%s event_structure\" where\n" test_name evs_type;
   Format.fprintf fmt "\"%s ≡ ⦇ \n" test_name;
   Format.fprintf fmt "    event_set = { %s },\n" (String.concat ", " (List.map (show_event long labels var_map) events));
 
@@ -82,9 +85,15 @@ let print_isabelle fmt long var_map test_name events labels rels pc (expected_la
 
   Format.fprintf fmt "⦈\"\n\n";
 
-  Format.fprintf fmt "definition order :: \"string rel\" where\n";
+  Format.fprintf fmt "definition order :: \"%s rel\" where\n" evs_type;
   Format.fprintf fmt "\"order ≡ { %s }\"\n\n" (String.concat ", " (List.map (show_relation long labels var_map) (refl_transitive_closure order)));
 
+
+  Format.fprintf fmt "definition constructed_pc :: \"%s rel\" where\n" evs_type;
+  Format.fprintf fmt "\"constructed_pc ≡ { %s }\"\n\n" (String.concat ", " (List.map (show_relation long labels var_map) (build_conflict pc)));
+
+  Format.fprintf fmt "definition conflict :: \"%s rel\" where\n" evs_type;
+  Format.fprintf fmt "\"conflict ≡ { %s }\"\n\n" (String.concat ", " (List.map (show_relation long labels var_map) conflict));
 
   let rec print_constraints fmt cs =
     match cs with
@@ -96,10 +105,10 @@ let print_isabelle fmt long var_map test_name events labels rels pc (expected_la
       ) :: print_constraints fmt cs
   in
 
-  Format.fprintf fmt "definition %s_expected_results :: \"string set set\" where \n" test_name;
+  Format.fprintf fmt "definition %s_expected_results :: \"%s set set\" where \n" test_name evs_type;
   Format.fprintf fmt "\"%s_expected_results = { {%s} }\"\n\n" test_name ((String.concat "}, {") (print_constraints fmt expected_labels));
 
-  Format.fprintf fmt "definition %s_forbidden_results :: \"string set set\" where \n" test_name;
+  Format.fprintf fmt "definition %s_forbidden_results :: \"%s set set\" where \n" test_name evs_type;
   Format.fprintf fmt "\"%s_forbidden_results = { {%s} }\"\n\n" test_name ((String.concat "}, {") (print_constraints fmt forbidden_labels));
 
   Format.fprintf fmt "value \"∀ V ∈ event_set %s . \n" test_name;
@@ -108,5 +117,5 @@ let print_isabelle fmt long var_map test_name events labels rels pc (expected_la
 
   Format.fprintf fmt "theorem \"∀ exp ∈ %s_expected_results .\n" test_name;
   Format.fprintf fmt "  ∃ cand_Config . (exp ⊆ cand_Config) ∧ (well_justified jctc6 cand_Config)\"\n";
-  Format.fprintf fmt "sorry\n";
+  Format.fprintf fmt "oops\n";
   ()

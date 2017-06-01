@@ -50,6 +50,13 @@ let refl_transitive_closure edges =
   let g = EventGraphOps.transitive_closure ~reflexive:true g in
   EventGraph.fold_edges (fun l r acc -> (l, r)::acc) g []
 
+let build_conflict edges =
+  let g = EventGraph.create () in
+  let _ = List.map (fun (l, r) -> EventGraph.add_edge g l r) edges in
+  let g = EventGraphOps.transitive_closure ~reflexive:false g in
+  let pc_id = EventGraph.fold_edges (fun l r acc -> (l, r)::(r, l)::acc) g [] in
+  List.filter (fun (l, r) -> l <> r) pc_id
+
 let remove_reflexive edges =
   let rec rm_reflexive edges xs =
     match edges with
