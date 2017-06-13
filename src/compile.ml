@@ -157,11 +157,13 @@ match !outfile_ref with
     OutputGraphviz.print_graphviz output_fmt (!long_names) var_map test_name evs labs rels pc []
   | ".tikz" | ".tex" ->
     OutputTikz.print_tikz output_fmt (!long_names) var_map test_name evs labs rels pc []
+  | ".es" ->
+    OutputRaduSim.print_sim output_fmt (!long_names) var_map test_name evs labs rels pc (expected_labels, forbidden_labels)
   | s ->
     Printf.printf "Unknown output type: `%s'.\n" s
   end
 | None ->
-  OutputIsabelle.print_isabelle output_fmt (!long_names) var_map test_name evs labs rels pc (expected_labels, forbidden_labels)
+  OutputRaduSim.print_sim output_fmt (!long_names) var_map test_name evs labs rels pc (expected_labels, forbidden_labels)
 ;;
 
 ();;
