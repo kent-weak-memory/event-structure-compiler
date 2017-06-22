@@ -29,10 +29,10 @@ let rec show_event_long labs var_map (E id) =
   | L (E eid, Read (Val v, Loc src, Loc dst)) :: _ when id = eid ->
     let src_loc = find_loc var_map src in
     let dst_loc = find_loc var_map dst in
-    Format.sprintf "\"%s: R%s%d %s\"" (pick_char id) src_loc v dst_loc
+    Format.sprintf "\"%s: R%s%d %s\"" (string_of_int id) src_loc v dst_loc
   | L (E eid, Write (Val v, Loc dst)) :: _ when id == eid ->
     let dst_loc = find_loc var_map dst in
-    Format.sprintf "\"%s: W%s%d\"" (pick_char id) dst_loc v
+    Format.sprintf "\"%s: W%s%d\"" (string_of_int id) dst_loc v
   | L (E eid, Init) :: _ when id == eid -> "Init"
   | _ :: xs -> show_event_long xs var_map (E id)
   | [] ->
@@ -41,7 +41,7 @@ let rec show_event_long labs var_map (E id) =
 let show_event long labs var_map (E id) =
   match long with
   | true -> show_event_long labs var_map (E id)
-  | false -> Format.sprintf "\"%s\"" (pick_char id)
+  | false -> Format.sprintf "\"%s\"" (string_of_int id)
 
 let show_label var_map label =
   match label with
@@ -63,18 +63,23 @@ let show_birelation style long labs var_map (left, right) =
 
 let print_tikz fmt long var_map test_name events labels rels pc req =
   Format.fprintf fmt "\\RequirePackage{luatex85}\n";
-  Format.fprintf fmt "\\documentclass{standalone}\n\n";
-
+  Format.fprintf fmt "\\documentclass[a4paper,landscape]{article}\n\n";
+  Format.fprintf fmt "\\usepackage[margin=0.5in]{geometry}";
   Format.fprintf fmt "\\usepackage{tikz}\n";
   Format.fprintf fmt "\\usepackage{dot2texi}\n";
   Format.fprintf fmt "\\usetikzlibrary{decorations.pathmorphing}\n\n";
 
   Format.fprintf fmt "\\tikzstyle{basic}=[rectangle,rounded corners=3pt,thin,draw=black,fill=blue!15]\n";
   Format.fprintf fmt "\\tikzstyle{po}=[->,draw=black,line width=1.000]\n";
-  Format.fprintf fmt "\\tikzstyle{conf}=[draw=red, decorate, decoration={zigzag,segment length=4,amplitude=.9, post=lineto,post length=2pt}]\n";
+  Format.fprintf fmt "\\tikzstyle{conf}=[-,draw=red, decorate, decoration={zigzag,segment length=4,amplitude=.9, pre=lineto, pre length=2pt, post=lineto,post length=2pt}]\n";
   Format.fprintf fmt "\\tikzstyle{just}=[->,draw=green,line width=1.000]\n\n";
+  Format.fprintf fmt "\\title{%s}" test_name;
+  Format.fprintf fmt "\\date{}";
 
   Format.fprintf fmt "\\begin{document}\n";
+
+
+  Format.fprintf fmt "\\begin{center}\n\\vskip -15ex\n\\Huge %s\n\\end{center}\n" test_name;
   Format.fprintf fmt "\\begin{tikzpicture}\n";
 	Format.fprintf fmt "  \\begin{dot2tex}[dot,tikz,codeonly,styleonly]\n";
 
@@ -83,10 +88,10 @@ let print_tikz fmt long var_map test_name events labels rels pc req =
   Format.fprintf fmt "        node[style=basic];\n";
   Format.fprintf fmt "        graph[nodesep=\"0\"];\n";
   let order, conflict = rels in
-  Format.fprintf fmt "        %s\n" (String.concat "\n        " (List.map (show_relation "po" long labels var_map)
-    (transitive_reduction order)));
-  Format.fprintf fmt "        %s\n" (String.concat "\n        " (List.map (show_birelation "conf" long labels var_map)
-    (remove_reflexive pc)));
+  let sort_relation (_, E a) (_, E b) = compare a b in
+  let ord_tr = List.sort sort_relation (transitive_reduction order) in
+  Format.fprintf fmt "        %s\n" (String.concat "\n        " (List.map (show_relation "po" long labels var_map) (ord_tr)));
+  Format.fprintf fmt "        %s\n" (String.concat "\n        " (List.map (show_birelation "conf" long labels var_map) (remove_reflexive pc)));
   let _ = List.map (fun (l, r) ->
     Format.fprintf fmt "        {rank=same; %s %s}\n"
     (show_event long labels var_map l)

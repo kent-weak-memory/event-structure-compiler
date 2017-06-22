@@ -66,9 +66,10 @@ let rec get_succs order ev =
   get_succs_i order
 
 let build_exec evs order =
-  let succs = List.fold_left (@) [] (List.map (get_succs order) evs) in
   let preds = List.fold_left (@) [] (List.map (get_preds order) evs) in
-  Mset.union succs preds
+  (* let succs = List.fold_left (@) [] (List.map (get_succs order) evs) in *)
+  (* Mset.union succs preds *)
+  Mset.make_proper preds
 
 let longest a b =
   if List.length a > List.length b then a else b
@@ -94,11 +95,12 @@ let print_sim fmt long var_map test_name events labels rels pc (expected_labels,
   let exec = List.nth interesting 0 in
   let exec = List.map strip_label exec in
 
-  let foo = build_exec exec order in
-  let foo = List.sort (fun (E a) (E b) -> compare a b) foo in
+  (* Sorting this makes it easier to think about *)
+  let e = build_exec exec order in
+  let e = List.sort (fun (E a) (E b) -> compare a b) e in
 
   Format.fprintf fmt "execution\n";
-  Format.fprintf fmt "  %s" (String.concat " " (List.map show_event foo));
+  Format.fprintf fmt "  %s" (String.concat " " (List.map show_event e));
 
   Format.fprintf fmt "\n";
   ()
