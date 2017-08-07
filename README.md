@@ -50,6 +50,22 @@ Appoximate grammar:
 | `.thy`      | Isabelle Theory |
 | `.als`      | Alloy    |
 
+
+## Usage
+
+`./compile.native <input file.jef> [output] [options]`
+
+Defaults to spitting out `.es` format onto standard out.
+
+### Options
+
+| Flag               | Function              |
+|:-------------------|:----------------------|
+| `--print-tokens`   | Print out a list of tokens before the program is parsed. |
+| `--alloy-path`     | Specify the path to the alloy model files for alloy output |
+| `--values` \| `-V` | Set the max value (V) such that the modeled. Values = {v | v ≤ V} |
+| `--long-names`     | Print long names in output, e.g. `c_Rx1_r2` |
+
 ## Building
 
 As with Scott's compiler from which this is derived, you'll need a handful of
