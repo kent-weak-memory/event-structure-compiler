@@ -100,6 +100,9 @@ type stmt =
   | Done
   [@@deriving show]
 
+let vals = ref 0
+let getVals () = !vals
+
 let parse_error (ln : int) (msg : string) : 'a =
   raise (ParseError ("Parse error on line " ^ string_of_int ln ^ ": " ^ msg))
 
@@ -181,6 +184,13 @@ let rec parse_stmt toks =
   | (T.LCurly, ln) :: toks ->
     let (s_list, toks) = parse_stmt_list toks in
     (LnLoc (Stmts (s_list), ln), toks)
+  | (T.Values, ln) :: toks ->
+    (match toks with
+      (T.Num n, ln) :: toks ->
+        vals := n;
+        parse_stmt toks
+     | _ -> parse_error ln "Expected number after `values' keyword"
+    )
   | (t,ln) :: _ -> parse_error ln ("Bad statement: " ^ (T.show_token t))
 
 (* Convert all of the statement in toks into an AST, stopping on a }. Return

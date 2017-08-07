@@ -43,7 +43,7 @@ let options = Arg.align ([
   ("--long-names", Arg.Set long_names, " use long event names in output e.g. `c_Rx1_r2'.")
 ]);;
 
-let usage_msg = "compile.byte MP.jef"
+let usage_msg = "compile.byte MP.jef MP.thy"
 
 let _ =
   Arg.parse options
@@ -88,6 +88,11 @@ let rec range x =
 in
 
 let parsed_program = Parser.parse_program tokens in
+let max_value = ref (match (Parser.getVals ()) with
+    0  -> !max_value
+  | n -> n
+) in
+
 let translated_program, var_map = TranslateLocations.translate_statements_vm parsed_program in
 let es = EventStructure.read_ast ~values:(range !max_value) translated_program in
 

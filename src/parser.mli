@@ -32,6 +32,7 @@ type stmt =
   | Done
   [@@deriving show]
 
+val getVals : unit -> int
 val show_stmt : stmt -> bytes
 val pp_stmt : Format.formatter -> stmt -> unit
 val pp_exit_state: Format.formatter -> exit_state -> unit
