@@ -15,6 +15,7 @@ parser. See COPYING for the full license text.
 This supports an abstraction of C like programming languages. It currently does
 not support loops. Loop support will be implemented by loop unrolling soon.
 
+### Input
 Appoximate grammar:
 
 ```
@@ -38,6 +39,16 @@ Appoximate grammar:
 <program> ::= <block>
            |  PAR_LIST <program> <program>
 ```
+
+### Output
+
+| Extension   |  Format  |
+|:-----------:|:---------|
+| `.es`       | Relations for QBF |
+| `.dot`      | Graphviz |
+| `.tex`      | Tikz     |
+| `.thy`      | Isabelle Theory |
+| `.als`      | Alloy    |
 
 ## Building
 
