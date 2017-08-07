@@ -22,20 +22,20 @@ Appoximate grammar:
 <block> ::= { <stmts>* }
 <stmts> ::= l = l
          |  l = v
-		 |  l = <expr>
-		 |  if(<condition) <block> else <block>
+         |  l = <expr>
+         |  if(<condition) <block> else <block>
 <expr>  ::= (<expr> * <expr>)
          |  (<expr> / <expr>)
-		 |  (<expr> + <expr>)
-		 |  (<expr> - <expr>)
-		 |  v
-		 |  l
+         |  (<expr> + <expr>)
+         |  (<expr> - <expr>)
+         |  v
+         |  l
 <cond>  ::= <expr> > <expr>
          |  <expr> < <expr>
-		 |  <expr> == <expr>
-		 |  <expr> != <expr>
-		 |  (<cond> && <cond>)
-		 
+         |  <expr> == <expr>
+         |  <expr> != <expr>
+         |  (<cond> && <cond>)
+         
 <program> ::= <block>
            |  PAR_LIST <program> <program>
 ```
