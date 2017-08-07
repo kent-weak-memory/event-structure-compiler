@@ -15,6 +15,30 @@ parser. See COPYING for the full license text.
 This supports an abstraction of C like programming languages. It currently does
 not support loops. Loop support will be implemented by loop unrolling soon.
 
+Appoximate grammar:
+
+```
+<block> ::= { <stmts>* }
+<stmts> ::= l = l
+         |  l = v
+		 |  l = <expr>
+		 |  if(<condition) <block> else <block>
+<expr>  ::= (<expr> * <expr>)
+         |  (<expr> / <expr>)
+		 |  (<expr> + <expr>)
+		 |  (<expr> - <expr>)
+		 |  v
+		 |  l
+<cond>  ::= <expr> > <expr>
+         |  <expr> < <expr>
+		 |  <expr> == <expr>
+		 |  <expr> != <expr>
+		 |  (<cond> && <cond>)
+		 
+<program> ::= <block>
+           |  PAR_LIST <program> <program>
+```
+
 ## Building
 
 As with Scott's compiler from which this is derived, you'll need a handful of
