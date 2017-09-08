@@ -4,5 +4,5 @@ build:
     - eval `opam config env`
     - opam switch 4.04.0 -y
     - eval `opam config env`
-    - opam install extlib ppx_deriving ppx_monadic
+    - opam install extlib ppx_deriving ppx_monadic ocamlgraph
     - make

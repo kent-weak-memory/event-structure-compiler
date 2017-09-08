@@ -72,7 +72,7 @@ As with Scott's compiler from which this is derived, you'll need a handful of
 dependencies:
 
 ```
-opam install extlib ppx_deriving ppx_monadic
+opam install extlib ppx_deriving ppx_monadic ocamlgraph
 ```
 
 Then all going well, you can run `make` to build the binaries.
