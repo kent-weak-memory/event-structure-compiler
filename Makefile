@@ -4,7 +4,7 @@ ALLOY_BIN = alloystar/dist/alloy4.2.jar
 COMPARATOR_BIN = ./comparator.native
 COMPILER_BIN = ./src/compile.native
 
-all: $(ALLOY_BIN) $(COMPILER_BIN)
+all: $(COMPILER_BIN)
 
 $(ALLOY_BIN):
 	opam install xml-light
