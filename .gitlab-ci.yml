@@ -1,6 +1,7 @@
 build:
   script:
-    - opam init
-    - opam switch 4.04
+    - opam init -y
+    - eval `opam config env`
+    - opam switch 4.04 -y
     - opam install extlib ppx_deriving ppx_monadic
     - make
