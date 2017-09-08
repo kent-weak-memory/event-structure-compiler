@@ -1,5 +1,6 @@
 before_script:
   - apt-get update -qq && apt-get install -y ocaml opam
+  - opam init
   - opam switch 4.04
   - opam install extlib ppx_deriving ppx_monadic
 
