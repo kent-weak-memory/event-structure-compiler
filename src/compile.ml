@@ -30,43 +30,49 @@ exception CompileException of string
 
 let print_tokens = ref false;;
 let alloy_path = ref ".";;
-let filename_ref = ref None;;
+let format = ref None;;
+let read_stdin = ref false;;
+let infile_ref = ref None;;
 let outfile_ref = ref None;;
 let max_value = ref 1;;
 let long_names = ref false;;
 
 let options = Arg.align ([
   ("--print-tokens", Arg.Set print_tokens, " print the tokens as they are tokenised.");
+  ("-f", Arg.String (fun f -> format := Some(f)), " choose output format by giving a file extension e.g. `-f dot', will be inferred from filenames if not given.");
   ("--alloy-path", Arg.Set_string alloy_path, " set the path that the alloy model exists at.");
   ("--values", Arg.Set_int max_value, " set the max value (V) such that the modeled V are in {0..V}");
   ("-V", Arg.Set_int max_value, " set the max value (V) such that the modeled V are in {0..V}");
-  ("--long-names", Arg.Set long_names, " use long event names in output e.g. `c_Rx1_r2'.")
+  ("--long-names", Arg.Set long_names, " use long event names in output e.g. `c_Rx1_r2'.");
+  ("-", Arg.Set read_stdin, " read from stdin")
 ]);;
 
-let usage_msg = "compile.byte MP.jef MP.thy"
+let usage_msg = "compile.byte [options] infile [outfile]"
 
 let _ =
   Arg.parse options
     (fun s ->
-       match !filename_ref with
-       | None ->
-         filename_ref := Some s
-       | Some s' -> (match !outfile_ref with
+       match !infile_ref, !read_stdin with
+       | None, false ->
+         infile_ref := Some s
+       | _, _ -> (match !outfile_ref with
          | None -> outfile_ref := Some s
-         | Some s'' -> (Printf.printf "Error: specified 2 output files %s and %s" s'' s; exit 1)
+         | Some s'' -> (Printf.eprintf "Error: specified 2 output files %s and %s" s'' s; exit 1)
          )
     )
     usage_msg
 
 let filename =
- match !filename_ref with
-  | None ->
-    (print_string usage_msg;
-     exit 1)
-  | Some filename ->
-    filename;;
+ match !infile_ref, !read_stdin with
+  | None, false -> (Arg.usage options usage_msg; exit 1)
+  | Some filename, false -> filename
+  | _, true -> "stdin";;
 
-let input = Std.input_file filename in
+let input = match !infile_ref, !read_stdin with
+  | None, false -> (Arg.usage options usage_msg; exit 1)
+  | Some filename, false -> Std.input_file filename
+  | _, true -> Std.input_all stdin
+in
 let tokens = Tokeniser.tokenise input 0 1 in
 
 let format_tok (a, _) =
@@ -129,7 +135,7 @@ let consts = Constraints.compile_constraints consts var_map in
 let (exp, forb) = Constraints.find_satisfying labs consts ([], []) in
 let expected_labels = n_cartesian_product exp in
 let forbidden_labels = n_cartesian_product forb in
-let test_name = Filename.chop_extension (Filename.basename filename) in
+let test_name = Filename.remove_extension (Filename.basename filename) in
 
 let rec find_label e labs lbs =
   match labs with
@@ -150,10 +156,8 @@ let rec build_pc labels pc =
 in
 let pc = build_pc labs pc in
 
-match !outfile_ref with
-| Some out_filename ->
-  begin
-  match Filename.extension out_filename with
+let handle_extension extension =
+  begin match extension with
   | ".thy" ->
     OutputIsabelle.print_isabelle output_fmt (!long_names) var_map test_name evs labs rels pc (expected_labels, forbidden_labels)
   | ".als" ->
@@ -165,10 +169,13 @@ match !outfile_ref with
   | ".es" ->
     OutputRaduSim.print_sim output_fmt (!long_names) var_map test_name evs labs rels pc (expected_labels, forbidden_labels)
   | s ->
-    Printf.printf "Unknown output type: `%s'.\n" s
+    Printf.eprintf "Unknown output type: `%s'.\n" s
   end
-| None ->
-  OutputRaduSim.print_sim output_fmt (!long_names) var_map test_name evs labs rels pc (expected_labels, forbidden_labels)
+in
+match !outfile_ref, !format with
+| _, Some extension -> handle_extension ("." ^ extension)
+| Some out_filename, _ -> handle_extension (Filename.extension out_filename)
+| None, None -> Printf.eprintf "-f required when output is to standard output.\n"
 ;;
 
 ();;
