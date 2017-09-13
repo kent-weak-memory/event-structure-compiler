@@ -34,13 +34,17 @@ let filename_ref = ref None;;
 let outfile_ref = ref None;;
 let max_value = ref 1;;
 let long_names = ref false;;
-
+let use_stdin = ref false;;
+let use_stdout = ref false;;
+let output_format : string option ref = ref None;;
 let options = Arg.align ([
   ("--print-tokens", Arg.Set print_tokens, " print the tokens as they are tokenised.");
   ("--alloy-path", Arg.Set_string alloy_path, " set the path that the alloy model exists at.");
   ("--values", Arg.Set_int max_value, " set the max value (V) such that the modeled V are in {0..V}");
   ("-V", Arg.Set_int max_value, " set the max value (V) such that the modeled V are in {0..V}");
-  ("--long-names", Arg.Set long_names, " use long event names in output e.g. `c_Rx1_r2'.")
+  ("--long-names", Arg.Set long_names, " use long event names in output e.g. `c_Rx1_r2'.");
+  ("--use-stdin", Arg.Set use_stdin, " read the input from standard in rather than a file");
+  ("--use-stdout", Arg.Set use_stdout, "  write the output to stdout rather than to a file");
 ]);;
 
 let usage_msg = "compile.byte MP.jef MP.thy"
@@ -150,25 +154,28 @@ let rec build_pc labels pc =
 in
 let pc = build_pc labs pc in
 
-match !outfile_ref with
-| Some out_filename ->
-  begin
-  match Filename.extension out_filename with
-  | ".thy" ->
-    OutputIsabelle.print_isabelle output_fmt (!long_names) var_map test_name evs labs rels pc (expected_labels, forbidden_labels)
-  | ".als" ->
-    OutputAlloy.print_alloy output_fmt var_map (!alloy_path) evs labs rels (exp @ forb)
-  | ".dot" ->
-    OutputGraphviz.print_graphviz output_fmt (!long_names) var_map test_name evs labs rels pc []
-  | ".tikz" | ".tex" ->
-    OutputTikz.print_tikz output_fmt (!long_names) var_map test_name evs labs rels pc []
-  | ".es" ->
-    OutputRaduSim.print_sim output_fmt (!long_names) var_map test_name evs labs rels pc (expected_labels, forbidden_labels)
-  | s ->
-    Printf.printf "Unknown output type: `%s'.\n" s
-  end
-| None ->
-  OutputRaduSim.print_sim output_fmt (!long_names) var_map test_name evs labs rels pc (expected_labels, forbidden_labels)
-;;
+let fmt = match !output_format with
+    None ->
+    (
+      match !outfile_ref with
+        Some out_filename -> Filename.extension out_filename
+      | None -> ".es"
+    )
+  | Some f -> f
+in
 
-();;
+match fmt with
+| ".thy" ->
+   OutputIsabelle.print_isabelle output_fmt (!long_names) var_map test_name evs labs rels pc (expected_labels, forbidden_labels)
+| ".als" ->
+   OutputAlloy.print_alloy output_fmt var_map (!alloy_path) evs labs rels (exp @ forb)
+| ".dot" ->
+   OutputGraphviz.print_graphviz output_fmt (!long_names) var_map test_name evs labs rels pc []
+| ".tikz" | ".tex" ->
+   OutputTikz.print_tikz output_fmt (!long_names) var_map test_name evs labs rels pc []
+| ".es" ->
+   OutputRaduSim.print_sim output_fmt (!long_names) var_map test_name evs labs rels pc (expected_labels, forbidden_labels)
+| s ->
+   Printf.printf "Unknown output type: `%s'.\n" s
+
+;;
