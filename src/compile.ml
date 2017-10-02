@@ -31,7 +31,6 @@ exception CompileException of string
 let print_tokens = ref false;;
 let alloy_path = ref ".";;
 let format = ref None;;
-let read_stdin = ref false;;
 let infile_ref = ref None;;
 let outfile_ref = ref None;;
 let max_value = ref 1;;
@@ -55,7 +54,7 @@ let usage_msg = "compile.byte [options] infile [outfile]"
 let _ =
   Arg.parse options
     (fun s ->
-       match !infile_ref, !read_stdin with
+       match !infile_ref, !use_stdin with
        | None, false ->
          infile_ref := Some s
        | _, _ -> (match !outfile_ref with
@@ -66,12 +65,12 @@ let _ =
     usage_msg
 
 let filename =
- match !infile_ref, !read_stdin with
+ match !infile_ref, !use_stdin with
   | None, false -> (Arg.usage options usage_msg; exit 1)
   | Some filename, false -> filename
   | _, true -> "stdin";;
 
-let input = match !infile_ref, !read_stdin with
+let input = match !infile_ref, !use_stdin with
   | None, false -> (Arg.usage options usage_msg; exit 1)
   | Some filename, false -> Std.input_file filename
   | _, true -> Std.input_all stdin
