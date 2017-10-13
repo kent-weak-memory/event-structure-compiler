@@ -37,6 +37,24 @@ let show_event (E id) = string_of_int id
 let show_relation (left, right) =
   Format.sprintf "%s %s" (show_event left) (show_event right)
 
+(* Print a list of (event id, label) pairs. *)
+let rec print_labels fmt labels var_map =
+  match labels with
+  | L (E eid, Read (Val value, Loc src, Loc dst)) :: xs ->
+    let src_loc = find_loc var_map src in
+    let dst_loc = find_loc var_map dst in
+    Format.fprintf fmt "  %d \"R%s%d %s\"\n" eid src_loc value dst_loc;
+    print_labels fmt xs var_map
+  | L (E eid, Write (Val value, Loc dst)) :: xs ->
+    let dst_loc = find_loc var_map dst in
+    Format.fprintf fmt "  %d \"W%s%d\"\n" eid dst_loc value;
+    print_labels fmt xs var_map
+  | L (E eid, Init) :: xs ->
+    Format.fprintf fmt "  %d \"Init\"\n" eid;
+    print_labels fmt xs var_map
+  | _ :: _ -> raise (RaduSimulatorExecption "Unlabelable event.")
+  | [] -> ()
+
 let rec print_justifies fmt justifies =
   match justifies with
   | [] -> ()
@@ -80,6 +98,9 @@ let print_sim fmt long var_map test_name events labels rels pc (expected_labels,
   Format.fprintf fmt "reads %s\n" (String.concat " " (List.map (fun f -> show_event (strip_label f)) reads));
 
   let order, conflict = rels in
+
+  Format.fprintf fmt "labels\n";
+  print_labels fmt labels var_map;
 
   Format.fprintf fmt "justifies\n";
   print_justifies fmt (get_all_justifies reads labels);
